@@ -3,7 +3,7 @@ import numpy as np
 from scipy.integrate import quad
 import random
 import utility
-import animal_constants
+import animal_constants_2025 as animal_constants
 
 class CowEnv:
     def __init__(self, parity_range, mac_range, mip_range, disease_range):
@@ -69,7 +69,7 @@ class CowEnv:
                     next_mip = 0
                 elif mip == 0: # breeding
                     if mac>=3:
-                        breed_cost = animal_constants.BREED_COST_PER_MONTH  
+                        breed_cost = animal_constants.BREED_COST_PER_INSEM  
                         if self.breed(parity, mac, disease) == True:
                             next_mip = 1
                         else: 
@@ -122,8 +122,8 @@ class CowEnv:
     
     def breed(self, parity, mac, disease):
         random_num = random.uniform(0, 1)
-        health_success_rate = max(0, animal_constants.PREG_RATE[parity] - (mac-3)*animal_constants.PREG_RATE_DROP)
-        sick_success_rate = health_success_rate*animal_constants.SICK_PREG_RATE_MULTIPLIER 
+        health_success_rate = max(0, animal_constants.CONCEPTION_RATE[parity] - (mac-3)*animal_constants.CONCEPTION_RATE_DROP)
+        sick_success_rate = health_success_rate*animal_constants.SICK_CONCEPTION_RATE_MULTIPLIER 
         if disease == 0:
             return True if random_num < health_success_rate else False
         else: 
