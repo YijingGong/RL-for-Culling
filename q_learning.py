@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import random
 import matplotlib.pyplot as plt
@@ -78,36 +79,6 @@ def load_or_create_q_table(filename, env):
         return q_table, rewards_per_episode, epsilon
 
 
-# Initialize the environment with individual features and train the agent
-env = cow_environment2.CowEnv(parity_range, mim_range, mip_range, disease_range)
-# env = cow_environment_no_sick.CowEnv(parity_range, mim_range, mip_range)    
-
-# Load existing Q-table or create a new one
-q_table_filename = 'outputs/5m.pkl'
-q_table, rewards_per_episode, epsilon = load_or_create_q_table(q_table_filename, env)
-# print("q_table:", len(q_table))
-# print("rewards_per_episode:", len(rewards_per_episode))
-# print(q_table, rewards_per_episode, epsilon)
-
-# start_time = time.time()
-# q_table, rewards_per_episode, epsilon = q_learning(env, q_table = q_table,rewards_per_episode = rewards_per_episode, epsilon = epsilon, num_episodes=5000000, max_steps = 60)  # Increase number of episodes for better learning
-# end_time = time.time()
-
-# # Save the learned Q-table
-# save_q_table(q_table, rewards_per_episode, epsilon, q_table_filename)
-
-
-# Print the learned Q-table
-print("Learned Q-table:")
-for i, (state, actions) in enumerate(q_table.items()):
-    if i >= 400:
-        break
-    print(f"State: {state}")
-    for action, value in actions.items():
-        print(f"  Action: {action}, Q-value: {value}")
-# print(q_table)
-print(len(q_table))
-
 def plot_rewards(rewards, window=100):
     moving_avg = np.convolve(rewards, np.ones(window)/window, mode='valid')
     plt.figure(figsize=(10, 5))
@@ -121,5 +92,52 @@ def plot_rewards(rewards, window=100):
     plt.savefig('outputs/figure.png')
     plt.close()
 
-plot_rewards(rewards_per_episode)
-# print(f"Time taken for training: {end_time - start_time} seconds")
+def main(q_table_filename):
+    """Entry point for training/evaluating the Q-learning agent.
+
+    Args:
+        q_table_filename (str): Path to the pickle file storing the Q-table.
+    """
+    # Initialize the environment with individual features and train the agent
+    env = cow_environment2.CowEnv(parity_range, mim_range, mip_range, disease_range)
+    # env = cow_environment_no_sick.CowEnv(parity_range, mim_range, mip_range)
+
+    # Load existing Q-table or create a new one
+    q_table, rewards_per_episode, epsilon = load_or_create_q_table(q_table_filename, env)
+
+    # Uncomment to train
+    # start_time = time.time()
+    # q_table, rewards_per_episode, epsilon = q_learning(
+    #     env,
+    #     q_table=q_table,
+    #     rewards_per_episode=rewards_per_episode,
+    #     epsilon=epsilon,
+    #     num_episodes=5000000,
+    #     max_steps=60,
+    # )
+    # end_time = time.time()
+    # save_q_table(q_table, rewards_per_episode, epsilon, q_table_filename)
+
+    # Print the learned Q-table (truncated for readability)
+    print("Learned Q-table:")
+    for i, (state, actions) in enumerate(q_table.items()):
+        if i >= 400:
+            break
+        print(f"State: {state}")
+        for action, value in actions.items():
+            print(f"  Action: {action}, Q-value: {value}")
+    print(len(q_table))
+
+    plot_rewards(rewards_per_episode)
+    # print(f"Time taken for training: {end_time - start_time} seconds")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="RL for Culling Q-learning runner")
+    parser.add_argument(
+        "--filename",
+        default="outputs/policy.pkl",
+        help="Path to the Q-table pickle file (default: outputs/policy.pkl)",
+    )
+    args = parser.parse_args()
+    main(args.filename)

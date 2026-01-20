@@ -7,22 +7,42 @@ import animal_constants_2025 as animal_constants
 
 class CowEnv:
     def __init__(self, parity_range, mac_range, mip_range, disease_range):
-        # only consider parity, MAC, MIP, disease
+        """Initialize the environment with allowed state ranges and default state.
+
+        Args:
+            parity_range (Sequence[int]): Valid parities that can appear in the state.
+            mac_range (Sequence[int]): Allowed months-after-calving values.
+            mip_range (Sequence[int]): Allowed months-in-pregnancy values.
+            disease_range (Sequence[int]): Allowed disease status flags (typically 0/1).
+        """
         self.state = (0, 0, 9, 0)
         self.parameter_a = self.parameter_b = self.parameter_c = None
-        self.actions = ['Keep', 'Cull']
+        self.actions = ['keep', 'replace']
         self.parity_range = parity_range
         self.mac_range = mac_range
         self.mip_range = mip_range
         self.disease_range = disease_range
 
     def reset(self):
+        """Sample a random valid state from the provided ranges and return it.
+
+        Returns:
+            tuple[int, int, int, int]: Random (parity, MAC, MIP, disease) state.
+        """
         self.state = (random.choice(self.parity_range), random.choice(self.mac_range), random.choice(self.mip_range), random.choice(self.disease_range)) 
         while utility.possible_state2(self.state, self.parity_range, self.mac_range, self.mip_range, self.disease_range) == False:
             self.state = (random.choice(self.parity_range), random.choice(self.mac_range), random.choice(self.mip_range), random.choice(self.disease_range)) 
         return self.state
 
     def step(self, action):
+        """Advance the environment one month based on the action.
+
+        Args:
+            action (str): Either 'keep' or 'replace'.
+
+        Returns:
+            tuple[tuple[int, int, int, int], float]: Next state and scalar reward.
+        """
         slaughter_income = 0
         calf_income = 0
         milk_income = 0
@@ -31,34 +51,29 @@ class CowEnv:
         parity, mac, mip, disease = self.state
         # print("state:", parity, mac, mip, disease)
 
-        if action == 'Cull':
-            slaughter_income = self.slaughter(parity, disease) 
+        if action == 'replace':
+            slaughter_income = self.calculate_slaughter_income(parity, disease) 
             self.state = (0, 0, 9, 0) # replaced by a new springer
             reward = slaughter_income - animal_constants.REPLACEMENT_COST 
-            # print(">cull")
+            # print(">replace")
             # print("slaughter_income:", slaughter_income, "replacement_cost", animal_constants.REPLACEMENT_COST )
-        
-        else: 
+        else: # 'keep' 
             next_parity = parity # by default, parity does not change, unless mip == 9
             next_mac = 0
             next_mip = 0
             next_mip = 0
             next_disease = 0
-
             # death
-            if self.death(parity, disease): # died
+            if self.death_status(parity, disease): # died
                 # print(">keep died")
-                slaughter_income = 0 # it's 0 because it is a died cow
+                slaughter_income = 0 # it's 0 because it is a dead cow
                 self.state = (0, 0, 9, 0) # replaced by a new springer
                 reward = slaughter_income - animal_constants.REPLACEMENT_COST 
                 # print("slaughter_income:", slaughter_income, "replacement_cost", animal_constants.REPLACEMENT_COST )
             else:
                 # milking
-                if mac != 0 and mip != 7 and mip != 8:
-                    dim = (mac-1)*30 + 1 
-                    self.parameter_a, self.parameter_b, self.parameter_c = self.assign_woods_parameters(parity)
-                    milk_production = self.calc_integral_wood_curve(dim, dim+30, self.parameter_a, self.parameter_b, self.parameter_c)
-                    milk_income = milk_production*2.2/100 * animal_constants.MILK_PRICE  
+                if mac != 0 and mip != 7 and mip != 8: # not heifer, not dry cow
+                    milk_income = self.calculate_milk_income(parity, mac, disease)
                 next_mac = mac + 1
 
                 # pregnancy status
@@ -70,23 +85,22 @@ class CowEnv:
                 elif mip == 0: # breeding
                     if mac>=3:
                         breed_cost = animal_constants.BREED_COST_PER_INSEM  
-                        if self.breed(parity, mac, disease) == True:
+                        if self.breed_status(parity, mac, disease) == True:
                             next_mip = 1
                         else: 
                             next_mip = 0
                 else: # keep pregnancy
                     next_mip = mip + 1
 
-                # Disease affect slauter income (in slaughter() function), milk income, breed success (in breed() function), and treatment_cost 
+                # Disease affect slaughter income (in calculate_slaughter_income() function), milk income (in calculate_milk_production() function), breed success (in breed() function), and treatment_cost 
                 if disease == 1: # when the cow is sick
-                    milk_income *= animal_constants.SICK_MILK_PRODUCTION_MULTIPLIER 
-                    treatment_cost = animal_constants.TREATMENT_COST_PER_MONTH
-                    if random.uniform(0, 1) < animal_constants.RECOVER_RATE:
+                    treatment_cost = animal_constants.MASTITIS_TREATMENT_COST_PER_MONTH
+                    if random.uniform(0, 1) < animal_constants.MASTITIS_RECOVER_RATE:
                         next_disease = 0 # recovered from disease
                     else:
                         next_disease = 1 # remain sick
                 else:
-                    if random.uniform(0, 1) < animal_constants.DISEASE_RISK[parity]:
+                    if random.uniform(0, 1) < animal_constants.MASTITIS_DISEASE_RISK[parity]:
                         next_disease = 1 # become sick
                     else:
                         next_disease = 0 #remain healthy
@@ -100,9 +114,22 @@ class CowEnv:
             
 
     def render(self):
+        """Print the current state tuple for quick inspection.
+
+        Returns:
+            None
+        """
         print(f"Current state: {self.state}")
 
     def assign_woods_parameters(self, parity):
+        """Return Woods curve parameters appropriate for the current parity.
+
+        Args:
+            parity (int): Current parity of the cow.
+
+        Returns:
+            tuple[float, float, float]: Parameters (a, b, c) for the Woods curve.
+        """
         if parity <= 3:
             self.parameter_a = animal_constants.WOODS_PARAMETERS[0][parity-1]
             self.parameter_b = animal_constants.WOODS_PARAMETERS[1][parity-1]
@@ -114,31 +141,126 @@ class CowEnv:
         return self.parameter_a, self.parameter_b, self.parameter_c
     
     def get_y_values_wood_curve(self, t, parameter_a, parameter_b, parameter_c):
+        """Compute the Woods curve estimated milk production (kg/d) at time t for supplied parameters.
+
+        Args:
+            t (float): Day in milk.
+            parameter_a (float): Woods parameter a.
+            parameter_b (float): Woods parameter b.
+            parameter_c (float): Woods parameter c.
+
+        Returns:
+            float: Milk production value (kg/d) at day t.
+        """
         return parameter_a * np.power(t, parameter_b) * np.exp(-1 * parameter_c * t)
 
     def calc_integral_wood_curve(self, t1, t2, parameter_a, parameter_b, parameter_c):
+        """Integrate the Woods curve between days t1 and t2 to estimate monthly milk.
+
+        Args:
+            t1 (float): Start day of integration window.
+            t2 (float): End day of integration window.
+            parameter_a (float): Woods parameter a.
+            parameter_b (float): Woods parameter b.
+            parameter_c (float): Woods parameter c.
+
+        Returns:
+            float: Integrated production between t1 and t2.
+        """
         result, _ = quad(self.get_y_values_wood_curve, t1, t2, args=(parameter_a, parameter_b, parameter_c))
         return result
     
-    def breed(self, parity, mac, disease):
+    def calculate_milk_production(self, parity, mac, disease):
+        """Estimate daily milk production at given days in milk using Woods curve.
+
+        Args:
+            dim (int): Days in milk.
+            parameter_a (float): Woods parameter a.
+            parameter_b (float): Woods parameter b.
+            parameter_c (float): Woods parameter c.
+            disease (int): Disease indicator (0 healthy, 1 sick).
+        Returns:
+            float: Estimated daily milk production (kg/d).
+        """
+        self.parameter_a, self.parameter_b, self.parameter_c = self.assign_woods_parameters(parity)
+        dim = (mac-1)*30 + 1
+        milk_production = self.calc_integral_wood_curve(dim, dim+30, self.parameter_a, self.parameter_b, self.parameter_c)
+        if disease == 1:
+            milk_production *= animal_constants.MASTITIS_SICK_MILK_PRODUCTION_MULTIPLIER
+        return milk_production
+    
+    def calculate_milk_income(self, parity, mac, disease):
+        """Calculate milk income for given parity, MAC, and disease status.
+
+        Args:
+            parity (int): Cow parity.
+            mac (int): Month after calving.
+        Returns:
+            float: Estimated milk income for the month.
+        """
+        milk_production = self.calculate_milk_production(parity, mac, disease)
+        milk_income = milk_production*2.2/100 * animal_constants.MILK_PRICE  
+        return milk_income
+    
+    def breed_status(self, parity, mac, disease):
+        """Stochastically determine whether breeding succeeds given parity, MAC, and disease.
+
+        Args:
+            parity (int): Current parity of the cow.
+            mac (int): Month after calving.
+            disease (int): Disease indicator (0 healthy, 1 sick).
+
+        Returns:
+            bool: True if breeding succeeds, False otherwise.
+        """
         random_num = random.uniform(0, 1)
         health_success_rate = max(0, animal_constants.CONCEPTION_RATE[parity] - (mac-3)*animal_constants.CONCEPTION_RATE_DROP)
-        sick_success_rate = health_success_rate*animal_constants.SICK_CONCEPTION_RATE_MULTIPLIER 
+        sick_success_rate = health_success_rate*animal_constants.MASTITIS_SICK_CONCEPTION_RATE_MULTIPLIER 
         if disease == 0:
             return True if random_num < health_success_rate else False
         else: 
             return True if random_num < sick_success_rate else False 
     
-    def slaughter(self, parity, disease): 
+    def get_body_weight(self, parity):
+        """Estimate body weight based on parity.
+
+        Args:
+            parity (int): Cow parity.
+
+        Returns:
+            float: Estimated body weight in kg.
+        """
         if parity == 0 or parity == 1:
             bw = 0.82 * animal_constants.MANUTURE_BODY_WEIGHT
         elif parity == 2:
             bw = 0.92 * animal_constants.MANUTURE_BODY_WEIGHT
         else:
             bw = animal_constants.MANUTURE_BODY_WEIGHT
-        return bw * animal_constants.SLAUGHTER_PRICE if disease == 0 else bw * animal_constants.SLAUGHTER_PRICE * animal_constants.SICK_SLAUGHTER_PRICE_MULTIPLIER 
+        return bw
+    
+    def calculate_slaughter_income(self, parity, disease): 
+        """Compute slaughter value based on parity-specific body weight and disease status.
 
-    def death(self, parity, disease):
+        Args:
+            parity (int): Cow parity.
+            disease (int): Disease indicator (0 healthy, 1 sick).
+
+        Returns:
+            float: Expected slaughter income for the cow.
+        """
+        bw = self.get_body_weight(parity)
+        return bw * animal_constants.SLAUGHTER_PRICE if disease == 0 else bw * animal_constants.SLAUGHTER_PRICE * animal_constants.MASTITIS_SICK_SLAUGHTER_PRICE_MULTIPLIER 
+
+    def death_status(self, parity, disease):
+        """Randomly determine whether the cow dies this month based on parity and disease.
+
+        Args:
+            parity (int): Cow parity.
+            disease (int): Disease indicator (0 healthy, 1 sick).
+
+        Returns:
+            bool: True if the cow dies this month, otherwise False.
+        """
         random_num = random.uniform(0, 1)
         if disease == 0: #healthy
             if random_num < animal_constants.DEATH_RATE[parity]/100:
@@ -146,7 +268,7 @@ class CowEnv:
             else:
                 return False
         else: 
-            if random_num < animal_constants.SICK_DEATH_RATE_MULTIPLIER*animal_constants.DEATH_RATE[parity]/100:
+            if random_num < animal_constants.MASTITIS_SICK_DEATH_RATE_MULTIPLIER*animal_constants.DEATH_RATE[parity]/100:
                 return True
             else:
                 return False
