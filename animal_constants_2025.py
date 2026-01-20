@@ -62,7 +62,5 @@ WOODS_PARAMETERS = [[15.72, 22.06, 21.92], [0.2433, 0.235, 0.2627], [0.002445, 0
 # MALE_CALF_PRICE = 804 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
 # FEMALE_CALF_PRICE = 742 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
 
-# Feed
-# https://www.ers.usda.gov/data-products/milk-cost-of-production-estimates shows feed cost by state and size of operation (lastest: 2021- 2024)
-# FEED_COST = 0.228 # unit: kg/milk ### original figure: 10.32 dollars per cwt milk sold, US, 2024 -> useless because it is whole-farm average, not cow-level. It mixes together feed consumed by lactating cows + dry cows + heifers + calves, and divides by total milk
-# FEED_COST = 0.24 # unit: kg of DM (Manfei 2023 repro paper: https://www.sciencedirect.com/science/article/pii/S0022030223001145#bib66)
+# Feed cost
+FEED_COST = 0.24 # unit: kg of DM (https://www.sciencedirect.com/science/article/pii/S0022030224007811#:~:text=Marginal%20Revenue%20and%20Cost,by%20the%20differing%20regression%20estimates)
