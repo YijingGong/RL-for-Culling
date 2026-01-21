@@ -6,9 +6,7 @@ import pickle
 import os
 import time
 import utility
-import cow_environment
 import cow_environment2
-import cow_environment_no_sick
 
 parity_range = range(13)
 mim_range = range(21)
@@ -50,7 +48,15 @@ def q_learning(env, q_table, rewards_per_episode, num_episodes, max_steps, alpha
 
     return q_table, rewards_per_episode, epsilon
 
+def ensure_directory(path):
+    """Create the parent directory for a file path if it is missing."""
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+
+
 def save_q_table(q_table, rewards_per_episode, epsilon, filename):
+    ensure_directory(filename)
     with open(filename, 'wb') as f:
         pickle.dump((q_table, rewards_per_episode, epsilon), f)
 
@@ -79,7 +85,10 @@ def load_or_create_q_table(filename, env):
         return q_table, rewards_per_episode, epsilon
 
 
-def plot_rewards(rewards, window=100):
+def plot_rewards(rewards, window=100, filepath='outputs/figure.png'):
+    if not rewards:
+        return
+    window = max(1, min(window, len(rewards)))
     moving_avg = np.convolve(rewards, np.ones(window)/window, mode='valid')
     plt.figure(figsize=(10, 5))
     plt.plot(rewards, label='Total Reward per Episode')
@@ -88,15 +97,17 @@ def plot_rewards(rewards, window=100):
     plt.ylabel('Total Reward')
     plt.title('Total Reward per Episode and Moving Average')
     plt.legend()
+    ensure_directory(filepath)
     # plt.show()
-    plt.savefig('outputs/figure.png')
+    plt.savefig(filepath)
     plt.close()
 
-def main(q_table_filename):
+def main(q_table_filename, num_episodes):
     """Entry point for training/evaluating the Q-learning agent.
 
     Args:
         q_table_filename (str): Path to the pickle file storing the Q-table.
+        num_episodes (int): Number of episodes to train when running q-learning.
     """
     # Initialize the environment with individual features and train the agent
     env = cow_environment2.CowEnv(parity_range, mim_range, mip_range, disease_range)
@@ -106,17 +117,17 @@ def main(q_table_filename):
     q_table, rewards_per_episode, epsilon = load_or_create_q_table(q_table_filename, env)
 
     # Uncomment to train
-    # start_time = time.time()
-    # q_table, rewards_per_episode, epsilon = q_learning(
-    #     env,
-    #     q_table=q_table,
-    #     rewards_per_episode=rewards_per_episode,
-    #     epsilon=epsilon,
-    #     num_episodes=5000000,
-    #     max_steps=60,
-    # )
-    # end_time = time.time()
-    # save_q_table(q_table, rewards_per_episode, epsilon, q_table_filename)
+    start_time = time.time()
+    q_table, rewards_per_episode, epsilon = q_learning(
+        env,
+        q_table=q_table,
+        rewards_per_episode=rewards_per_episode,
+        epsilon=epsilon,
+        num_episodes=num_episodes,
+        max_steps=60,
+    )
+    end_time = time.time()
+    save_q_table(q_table, rewards_per_episode, epsilon, q_table_filename)
 
     # Print the learned Q-table (truncated for readability)
     print("Learned Q-table:")
@@ -128,8 +139,8 @@ def main(q_table_filename):
             print(f"  Action: {action}, Q-value: {value}")
     print(len(q_table))
 
-    plot_rewards(rewards_per_episode)
-    # print(f"Time taken for training: {end_time - start_time} seconds")
+    plot_rewards(rewards_per_episode, filepath=f"{q_table_filename}_rewards.png")
+    print(f"Time taken for training: {end_time - start_time} seconds")
 
 
 if __name__ == "__main__":
@@ -139,5 +150,11 @@ if __name__ == "__main__":
         default="outputs/policy.pkl",
         help="Path to the Q-table pickle file (default: outputs/policy.pkl)",
     )
+    parser.add_argument(
+        "--episodes",
+        type=int,
+        default=5_000_000,
+        help="Number of episodes for training (default: 5,000,000)",
+    )
     args = parser.parse_args()
-    main(args.filename)
+    main(args.filename, args.episodes)
