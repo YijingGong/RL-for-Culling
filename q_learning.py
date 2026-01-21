@@ -44,7 +44,8 @@ def q_learning(env, q_table, rewards_per_episode, num_episodes, max_steps, alpha
 
         epsilon = max(min_epsilon, epsilon * epsilon_decay)
         rewards_per_episode.append(total_reward)
-        print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
+        if (episode + 1) % 1000 == 0:
+            print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
 
     return q_table, rewards_per_episode, epsilon
 

@@ -48,13 +48,15 @@ class CowEnv:
         milk_income = 0
         breed_cost = 0
         treatment_cost = 0
+        feed_cost = 0
         parity, mac, mip, disease = self.state
         # print("state:", parity, mac, mip, disease)
 
         if action == 'replace':
             slaughter_income = self.calculate_slaughter_income(parity, disease) 
             self.state = (0, 0, 9, 0) # replaced by a new springer
-            reward = slaughter_income - animal_constants.REPLACEMENT_COST 
+            feed_cost = self.calculate_feed_cost(self.state[0], self.state[1], self.state[2], self.state[3])
+            reward = slaughter_income - animal_constants.REPLACEMENT_COST - feed_cost
             # print(">replace")
             # print("slaughter_income:", slaughter_income, "replacement_cost", animal_constants.REPLACEMENT_COST )
         else: # 'keep' 
@@ -68,12 +70,12 @@ class CowEnv:
                 # print(">keep died")
                 slaughter_income = 0 # it's 0 because it is a dead cow
                 self.state = (0, 0, 9, 0) # replaced by a new springer
-                reward = slaughter_income - animal_constants.REPLACEMENT_COST 
+                feed_cost = self.calculate_feed_cost(self.state[0], self.state[1], self.state[2], self.state[3])
+                reward = slaughter_income - animal_constants.REPLACEMENT_COST - feed_cost
                 # print("slaughter_income:", slaughter_income, "replacement_cost", animal_constants.REPLACEMENT_COST )
             else:
                 # milking
-                if mac != 0 and mip != 7 and mip != 8: # not heifer, not dry cow
-                    milk_income = self.calculate_milk_income(parity, mac, disease)
+                milk_income = self.calculate_milk_income(parity, mac, mip, disease)
                 next_mac = mac + 1
 
                 # pregnancy status
@@ -85,7 +87,7 @@ class CowEnv:
                 elif mip == 0: # breeding
                     if mac>=3:
                         breed_cost = animal_constants.BREED_COST_PER_INSEM  
-                        if self.breed_status(parity, mac, disease) == True:
+                        if self.breed_success(parity, mac, disease) == True:
                             next_mip = 1
                         else: 
                             next_mip = 0
@@ -106,7 +108,8 @@ class CowEnv:
                         next_disease = 0 #remain healthy
 
                 self.state = (next_parity, next_mac, next_mip, next_disease)
-                reward = milk_income + calf_income - breed_cost - treatment_cost
+                feed_cost = self.calculate_feed_cost(self.state[0], self.state[1], self.state[2], self.state[3])
+                reward = milk_income + calf_income - breed_cost - treatment_cost - feed_cost
                 # print(">keep not died")
                 # print("milk income:", milk_income, "calf_income:", calf_income, "breed_cost", breed_cost, "treatment_cost",treatment_cost)
         # print("one reward:", reward)
@@ -169,19 +172,20 @@ class CowEnv:
         """
         result, _ = quad(self.get_y_values_wood_curve, t1, t2, args=(parameter_a, parameter_b, parameter_c))
         return result
-    
-    def calculate_milk_production(self, parity, mac, disease):
-        """Estimate daily milk production at given days in milk using Woods curve.
+
+    def calculate_monthly_milk_production(self, parity, mac, mip, disease):
+        """Estimate monthly milk production using Woods curve. Discounts for disease if applicable.
 
         Args:
-            dim (int): Days in milk.
-            parameter_a (float): Woods parameter a.
-            parameter_b (float): Woods parameter b.
-            parameter_c (float): Woods parameter c.
+            parity (int): Cow parity.
+            mac (int): Month after calving.
+            mip (int): Month in pregnancy.
             disease (int): Disease indicator (0 healthy, 1 sick).
         Returns:
-            float: Estimated daily milk production (kg/d).
+            float: Estimated monthly milk production (kg/month).
         """
+        if mac == 0 or mip == 7 or mip == 8 or mip == 9: # springer or dry cow
+            return 0
         self.parameter_a, self.parameter_b, self.parameter_c = self.assign_woods_parameters(parity)
         dim = (mac-1)*30 + 1
         milk_production = self.calc_integral_wood_curve(dim, dim+30, self.parameter_a, self.parameter_b, self.parameter_c)
@@ -189,7 +193,7 @@ class CowEnv:
             milk_production *= animal_constants.MASTITIS_SICK_MILK_PRODUCTION_MULTIPLIER
         return milk_production
     
-    def calculate_milk_income(self, parity, mac, disease):
+    def calculate_milk_income(self, parity, mac, mip, disease):
         """Calculate milk income for given parity, MAC, and disease status.
 
         Args:
@@ -198,11 +202,44 @@ class CowEnv:
         Returns:
             float: Estimated milk income for the month.
         """
-        milk_production = self.calculate_milk_production(parity, mac, disease)
+        milk_production = self.calculate_monthly_milk_production(parity, mac, mip, disease)
         milk_income = milk_production*2.2/100 * animal_constants.MILK_PRICE  
         return milk_income
     
-    def breed_status(self, parity, mac, disease):
+    def _estimate_daily_dmi(self, parity, mac, mip, disease):
+        """Return daily DMI (kg/d) using milk, body weight, and weeks in milk."""
+        if parity == 0:  # heifer springer 
+            return 9 # hard-coded fixed 9 kg/day for springer heifer
+
+        monthly_milk = self.calculate_monthly_milk_production(parity, mac, mip, disease)
+        avg_milk_per_day = monthly_milk / 30.0
+        metabolic_bw = self.get_body_weight(parity) ** 0.75
+        dim_start = (mac - 1) * 30 + 1
+        dim_end = mac * 30
+        avg_dim = (dim_start + dim_end) / 2.0
+        weeks_in_milk = avg_dim / 7.0
+        return (0.372 * avg_milk_per_day + 0.0968 * metabolic_bw) * (1 - np.exp(-0.192 * (weeks_in_milk + 3.67)))
+    
+    def get_monthly_dmi(self, parity, mac, mip, disease):
+        """Estimate monthly dry matter intake (kg/month) for the given state."""
+        return self._estimate_daily_dmi(parity, mac, mip, disease) * 30.0
+    
+    def calculate_feed_cost(self, parity, mac, mip, disease):
+        """Estimate monthly feed cost based on DMI and feed price.
+
+        Args:
+            parity (int): Cow parity.
+            mac (int): Month after calving.
+            mip (int): Month in pregnancy.
+            disease (int): Disease indicator (0 healthy, 1 sick).  
+        Returns:
+            float: Estimated monthly feed cost.
+        """
+        monthly_dmi = self.get_monthly_dmi(parity, mac, mip, disease)
+        feed_cost = monthly_dmi * animal_constants.FEED_COST
+        return feed_cost
+    
+    def breed_success(self, parity, mac, disease):
         """Stochastically determine whether breeding succeeds given parity, MAC, and disease.
 
         Args:
