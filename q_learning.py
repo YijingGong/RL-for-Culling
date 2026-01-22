@@ -144,6 +144,7 @@ def main(q_table_filename, num_episodes):
     print(f"Time taken for training: {end_time - start_time} seconds")
 
 
+# to run: python q_learning.py --filename outputs/policy.pkl --episodes 5000000
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RL for Culling Q-learning runner")
     parser.add_argument(
