@@ -20,11 +20,13 @@ def summarize(env: cow_environment2.CowEnv, scenario: Scenario) -> None:
 	monthly_milk = env.calculate_monthly_milk_production(*state)
 	monthly_dmi = env.get_monthly_dmi(*state)
 	monthly_feed = env.calculate_feed_cost(*state)
+	slaughter_income = env.calculate_slaughter_income(scenario.parity, scenario.disease)
 
 	print(f"[{scenario.label}] state={state}")
 	print(f"  milk/day      : {monthly_milk / 30:.2f} kg")
 	print(f"  dmi/day       : {monthly_dmi / 30:.2f} kg")
 	print(f"  feed cost/day : ${monthly_feed / 30:.2f}")
+	print(f"  slaughter income : ${slaughter_income:.2f}")
 	print()
 
 

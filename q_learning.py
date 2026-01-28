@@ -13,7 +13,7 @@ mim_range = range(21)
 mip_range = range(10)
 disease_range = range(2)
 
-def q_learning(env, q_table, rewards_per_episode, num_episodes, max_steps, alpha=0.1, gamma=0.99, epsilon=1.0, epsilon_decay=0.999, min_epsilon=0.1):
+def q_learning(env, q_table, rewards_per_episode, num_episodes, max_steps, alpha=0.001, gamma=0.95, epsilon=1.0, epsilon_decay=0.9995, min_epsilon=0.01):
     for episode in range(num_episodes):
         state = env.reset()  # Start a new episode
         total_reward = 0
@@ -125,7 +125,7 @@ def main(q_table_filename, num_episodes):
         rewards_per_episode=rewards_per_episode,
         epsilon=epsilon,
         num_episodes=num_episodes,
-        max_steps=60,
+        max_steps=180,
     )
     end_time = time.time()
     save_q_table(q_table, rewards_per_episode, epsilon, q_table_filename)

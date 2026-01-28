@@ -4,6 +4,10 @@ from scipy.integrate import quad
 import random
 import utility
 import animal_constants_2025 as animal_constants
+import animal_constants_OG as animal_constants
+import animal_constants_OB as animal_constants
+import animal_constants_UG as animal_constants
+import animal_constants_UB as animal_constants
 
 class CowEnv:
     def __init__(self, parity_range, mac_range, mip_range, disease_range):
@@ -24,14 +28,32 @@ class CowEnv:
         self.disease_range = disease_range
 
     def reset(self):
-        """Sample a random valid state from the provided ranges and return it.
-
-        Returns:
-            tuple[int, int, int, int]: Random (parity, MAC, MIP, disease) state.
-        """
-        self.state = (random.choice(self.parity_range), random.choice(self.mac_range), random.choice(self.mip_range), random.choice(self.disease_range)) 
-        while utility.possible_state2(self.state, self.parity_range, self.mac_range, self.mip_range, self.disease_range) == False:
-            self.state = (random.choice(self.parity_range), random.choice(self.mac_range), random.choice(self.mip_range), random.choice(self.disease_range)) 
+        """Sample a random valid state with realistic disease prevalence."""
+        # Sample parity, MAC, MIP uniformly
+        parity = random.choice(self.parity_range)
+        mac = random.choice(self.mac_range)
+        mip = random.choice(self.mip_range)
+        
+        # FIXED: Sample disease with realistic prevalence
+        incidence = animal_constants.MASTITIS_DISEASE_RISK[parity]
+        recovery = animal_constants.MASTITIS_RECOVER_RATE
+        disease_prevalence = incidence / (incidence + recovery) if (incidence + recovery) > 0 else 0
+        disease = 1 if random.random() < disease_prevalence else 0
+        
+        self.state = (parity, mac, mip, disease)
+        
+        # Ensure valid state
+        while not utility.possible_state2(self.state, self.parity_range, self.mac_range, 
+                                        self.mip_range, self.disease_range):
+            parity = random.choice(self.parity_range)
+            mac = random.choice(self.mac_range)
+            mip = random.choice(self.mip_range)
+            incidence = animal_constants.MASTITIS_DISEASE_RISK[parity]
+            recovery = animal_constants.MASTITIS_RECOVER_RATE
+            disease_prevalence = incidence / (incidence + recovery) if (incidence + recovery) > 0 else 0
+            disease = 1 if random.random() < disease_prevalence else 0
+            self.state = (parity, mac, mip, disease)
+        
         return self.state
 
     def step(self, action):

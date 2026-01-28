@@ -1,12 +1,14 @@
 ### Economic parameters for dairy cattle in 2025 ###
 # Milk prices
-MILK_PRICE = 18.8 # per cwt, average of 2024 Nov to 2025 Oct (12 months) from USDA uniform milk price https://mymarketnews.ams.usda.gov/filerepo/sites/default/files/3351/2025-11-01/1293713/ams_3351_00065.pdf 
+MILK_PRICE = 15 # per cwt, average of 2024 Nov to 2025 Oct (12 months) from USDA uniform milk price https://mymarketnews.ams.usda.gov/filerepo/sites/default/files/3351/2025-11-01/1293713/ams_3351_00065.pdf 
+# Feed cost
+FEED_COST = 0.29 # unit: kg of DM (https://www.sciencedirect.com/science/article/pii/S0022030224007811#:~:text=Marginal%20Revenue%20and%20Cost,by%20the%20differing%20regression%20estimates)
 # Replacement cost
-REPLACEMENT_COST = 2757 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
+REPLACEMENT_COST = 4135 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
 # Calf price
-CALF_PRICE = 773 # per hd, average of heifer calf and bull calf 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
+CALF_PRICE = 1160 # per hd, average of heifer calf and bull calf 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
 # Slaughter prices 
-SLAUGHTER_PRICE = 3.23 # per kg, according to average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957 # avg of $266/cwt for dressed cow (breaker, boner, cutter) * 55% = $146.3/cwt = $146.3/45.3592 kg 3.23/kg
+SLAUGHTER_PRICE = 3.78 # per kg, according to average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957 # avg of $266/cwt for dressed cow (breaker, boner, cutter) * 55% = $146.3/cwt = $146.3/45.3592 kg 3.23/kg
 MANUTURE_BODY_WEIGHT = 740.1 # kg, according to Manfei repro paper: https://www.sciencedirect.com/science/article/pii/S0022030223001145#bib66
 # Breeding cost
 BREED_COST_PER_INSEM = 30 # estimated from 1) Manfei repro paper: https://www.sciencedirect.com/science/article/pii/S0022030223001145#bib66 ($15/straw, an arm service as $10/AI); 2)  https://doi.org/10.3389/fvets.2023.1345782: "The costs of reproduction programs are insemination costs (semen US$20/cow and labor US$5/cow) and ultrasound pregnancy monitoring (US$100/h)."
@@ -61,6 +63,3 @@ WOODS_PARAMETERS = [[15.72, 22.06, 21.92], [0.2433, 0.235, 0.2627], [0.002445, 0
 # if we want to differentiate bull calf and heifer calf price (we can also keep heifer and calculate a shadow price for them)
 # MALE_CALF_PRICE = 804 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
 # FEMALE_CALF_PRICE = 742 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
-
-# Feed cost
-FEED_COST = 0.24 # unit: kg of DM (https://www.sciencedirect.com/science/article/pii/S0022030224007811#:~:text=Marginal%20Revenue%20and%20Cost,by%20the%20differing%20regression%20estimates)
