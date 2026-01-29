@@ -131,7 +131,7 @@ def main(q_table_filename, num_episodes):
     save_q_table(q_table, rewards_per_episode, epsilon, q_table_filename)
 
     # Print the learned Q-table (truncated for readability)
-    print("Learned UB Q-table:")
+    print("Learned Q-table:")
     for i, (state, actions) in enumerate(q_table.items()):
         if i >= 400:
             break

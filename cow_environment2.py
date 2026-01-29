@@ -3,11 +3,11 @@ import numpy as np
 from scipy.integrate import quad
 import random
 import utility
-# import animal_constants_2025 as animal_constants
+import animal_constants_2025 as animal_constants
 # import animal_constants_OG as animal_constants
 # import animal_constants_OB as animal_constants
 # import animal_constants_UG as animal_constants
-import animal_constants_UB as animal_constants
+# import animal_constants_UB as animal_constants
 
 class CowEnv:
     def __init__(self, parity_range, mac_range, mip_range, disease_range):
