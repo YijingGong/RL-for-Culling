@@ -1,2 +1,2 @@
-outputs/*.pkl
+outputs/archive_q_learning_tests/policy_feed10M.pkl
 plot_visualization.ipynb
