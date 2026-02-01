@@ -423,5 +423,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Force restart training from scratch (ignore existing model)",
     )
+    parser.add_argument(
+        "--scenario",
+        type=str,
+        default="2025",
+        choices=["2025", "OG", "OB", "UG", "UB"],
+        help="Scenario to use for animal constants (default: 2025)",
+    )
     args = parser.parse_args()
+    
+    # Set the scenario before running main
+    cow_environment2.set_scenario(args.scenario)
+    
     main(args.filename, args.episodes, force_restart=args.restart)

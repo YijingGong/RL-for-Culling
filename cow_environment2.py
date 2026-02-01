@@ -3,11 +3,38 @@ import numpy as np
 from scipy.integrate import quad
 import random
 import utility
-import animal_constants_2025 as animal_constants
-# import animal_constants_OG as animal_constants
-# import animal_constants_OB as animal_constants
-# import animal_constants_UG as animal_constants
-# import animal_constants_UB as animal_constants
+# Dynamic import based on scenario - modified to support command-line selection
+# Default scenario is '2025' if not specified
+_scenario = '2025'  # Default scenario
+animal_constants = None  # Will be set by set_scenario()
+
+def set_scenario(scenario='2025'):
+    """Set the animal constants scenario dynamically.
+    
+    Args:
+        scenario (str): One of '2025', 'OG', 'OB', 'UG', 'UB'
+    """
+    global animal_constants, _scenario
+    _scenario = scenario
+    
+    scenario_map = {
+        '2025': 'animal_constants_2025',
+        'OG': 'animal_constants_OG',
+        'OB': 'animal_constants_OB',
+        'UG': 'animal_constants_UG',
+        'UB': 'animal_constants_UB'
+    }
+    
+    if scenario not in scenario_map:
+        raise ValueError(f"Unknown scenario: {scenario}. Must be one of {list(scenario_map.keys())}")
+    
+    module_name = scenario_map[scenario]
+    animal_constants = __import__(module_name)
+    print(f"Loaded scenario: {scenario} (module: {module_name})")
+    return animal_constants
+
+# Initialize with default scenario
+set_scenario(_scenario)
 
 class CowEnv:
     def __init__(self, parity_range, mac_range, mip_range, disease_range):

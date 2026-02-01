@@ -158,13 +158,17 @@ def track_cow_open(q_table, parity: int, disease: int, max_mac: int = MAX_OPEN_M
     return mac_list, q_diff_list
 
 
-def plot_qvalue_diff_correct(q_table, parity: int, disease: int, title: str, smooth: bool = True):
+def plot_qvalue_diff_correct(q_table, parity: int, disease: int, title: str,
+                            smooth: bool = True, ax=None):
     """
     Plot Q-value difference correctly:
     - Lines for cows that get pregnant at different MAC values (tracking through pregnancy)
     - Reference line for open cow (MIP=0)
     """
-    fig, ax = plt.subplots(figsize=(8, 5))
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 5))
+    else:
+        fig = ax.figure
     mac_range = range(0, 21)
     
     # Color palette for pregnant cow tracks
@@ -178,33 +182,33 @@ def plot_qvalue_diff_correct(q_table, parity: int, disease: int, title: str, smo
             color = track_colors[i % len(track_colors)]
             
             # Plot raw points
-            ax.plot(mac_list, q_diff_list, "o", alpha=0.3, markersize=3, color=color,
-                   label=f"at MIP = {start_mac} (raw)")
+            ax.plot(mac_list, q_diff_list, "o", alpha=0.3, markersize=3, color=color)
             
             # Plot smoothed line if requested
             if smooth and len(q_diff_list) > 3:
                 smoothed = smooth_line(np.array(q_diff_list), window=3)
                 ax.plot(mac_list, smoothed, "-", linewidth=2, color=color,
-                       label=f"at MIP = {start_mac} (smoothed)")
+                       label=f"at MIP = {start_mac}")
     
     # Plot open cow reference line
     mac_list_open, q_diff_list_open = track_cow_open(q_table, parity, disease)
     
     if len(mac_list_open) > 0:
         # Plot raw points
-        ax.plot(mac_list_open, q_diff_list_open, "o", alpha=0.3, markersize=3, color="gray",
-               label=f"Open cow (raw)")
+        ax.plot(mac_list_open, q_diff_list_open, "o", alpha=0.3, markersize=3, color="gray")
         
         # Plot smoothed line if requested
         if smooth and len(q_diff_list_open) > 3:
             smoothed_open = smooth_line(np.array(q_diff_list_open), window=3)
             ax.plot(mac_list_open, smoothed_open, "--", linewidth=2, color="black",
-                   label=f"Open cow (smoothed)")
+                   label=f"Open cow")
     
     # Styling
     ax.axhline(y=0, color="black", linestyle="--", linewidth=1, alpha=0.5)
     ax.set_xlabel("Month After Calving (MAC)", fontsize=10)
     ax.set_xticks(mac_range)
+    ax.set_xlim(0, 18.5)
+    ax.set_ylim(-1100, 1200)
     ax.set_ylabel("Q-value difference\n(Keep - Replace)", fontsize=10)
     ax.set_title(title, fontsize=11, fontweight="bold")
     ax.legend(fontsize=8, loc="best")
@@ -282,50 +286,8 @@ def _create_combined_overview(q_table, rewards, scenario_name: str, smooth: bool
         (3, 0, "Parity 3, Healthy"),
     ]
     
-    track_colors = ["#1f77b4", "#f4a2cd", "#f28e2b"]
-    mac_range = range(0, 21)
-    
     for ax, (parity, disease, title) in zip(line_axes, configs):
-        # Plot pregnant cow tracks
-        for i, start_mac in enumerate(TRACK_START_MACS):
-            mac_list, mip_list, q_diff_list = track_cow_from_preg(q_table, parity, start_mac, disease)
-            
-            if len(mac_list) > 0:
-                color = track_colors[i % len(track_colors)]
-                
-                # Plot raw points
-                ax.plot(mac_list, q_diff_list, "o", alpha=0.3, markersize=3, color=color)
-                
-                # Plot smoothed line if requested
-                if smooth and len(q_diff_list) > 3:
-                    smoothed = smooth_line(np.array(q_diff_list), window=3)
-                    ax.plot(mac_list, smoothed, "-", linewidth=2, color=color,
-                           label=f"at MIP = {start_mac} (smoothed)")
-        
-        # Plot open cow reference line
-        mac_list_open, q_diff_list_open = track_cow_open(q_table, parity, disease)
-        
-        if len(mac_list_open) > 0:
-            # Plot raw points
-            ax.plot(mac_list_open, q_diff_list_open, "o", alpha=0.3, markersize=3, color="gray")
-            
-            # Plot smoothed line if requested
-            if smooth and len(q_diff_list_open) > 3:
-                smoothed_open = smooth_line(np.array(q_diff_list_open), window=3)
-                ax.plot(mac_list_open, smoothed_open, "--", linewidth=2, color="black",
-                       label=f"Open cow (smoothed)")
-        
-        ax.axhline(y=0, color="black", linestyle="--", linewidth=1, alpha=0.5)
-        ax.set_xlabel("Month After Calving (MAC)", fontsize=10)
-        ax.set_xticks(mac_range)
-        ax.set_ylabel("Q-value difference\n(Keep - Replace)", fontsize=10)
-        ax.set_title(title, fontsize=11, fontweight="bold")
-        ax.legend(fontsize=8, loc="best")
-        ax.grid(True, alpha=0.3)
-        ax.text(0.98, 0.02, "Above 0: Keep\nBelow 0: Cull",
-                transform=ax.transAxes, fontsize=8,
-                verticalalignment="bottom", horizontalalignment="right",
-                bbox=dict(boxstyle="round", facecolor="yellow", alpha=0.3))
+        plot_qvalue_diff_correct(q_table, parity, disease, title, smooth=smooth, ax=ax)
 
     fig.suptitle(f"DQN Analysis: {scenario_name}", fontsize=18, fontweight="bold", y=0.995)
     return fig

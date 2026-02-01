@@ -1,0 +1,151 @@
+
+--- Run started 2026-01-29 16:05:24 ---
+
+======================================================================
+CREATING NEW MODEL
+======================================================================
+
+Starting fresh with epsilon: 1.0000
+======================================================================
+
+Starting DQN training for 100000 episodes...
+Episode 1000/100000, Total Reward: 34098, Epsilon: 0.0100, Buffer: 100000
+Episode 2000/100000, Total Reward: 31455, Epsilon: 0.0100, Buffer: 100000
+Episode 3000/100000, Total Reward: 21874, Epsilon: 0.0100, Buffer: 100000
+Episode 4000/100000, Total Reward: 32020, Epsilon: 0.0100, Buffer: 100000
+Episode 5000/100000, Total Reward: 20129, Epsilon: 0.0100, Buffer: 100000
+Episode 6000/100000, Total Reward: 21069, Epsilon: 0.0100, Buffer: 100000
+Episode 7000/100000, Total Reward: 29849, Epsilon: 0.0100, Buffer: 100000
+Episode 8000/100000, Total Reward: 30546, Epsilon: 0.0100, Buffer: 100000
+Episode 9000/100000, Total Reward: 29956, Epsilon: 0.0100, Buffer: 100000
+Episode 10000/100000, Total Reward: 36085, Epsilon: 0.0100, Buffer: 100000
+Episode 11000/100000, Total Reward: 35517, Epsilon: 0.0100, Buffer: 100000
+Episode 12000/100000, Total Reward: 29669, Epsilon: 0.0100, Buffer: 100000
+Episode 13000/100000, Total Reward: 35379, Epsilon: 0.0100, Buffer: 100000
+Episode 14000/100000, Total Reward: 25886, Epsilon: 0.0100, Buffer: 100000
+Episode 15000/100000, Total Reward: 28038, Epsilon: 0.0100, Buffer: 100000
+Episode 16000/100000, Total Reward: 34568, Epsilon: 0.0100, Buffer: 100000
+Episode 17000/100000, Total Reward: 34460, Epsilon: 0.0100, Buffer: 100000
+Episode 18000/100000, Total Reward: 27647, Epsilon: 0.0100, Buffer: 100000
+Episode 19000/100000, Total Reward: 29291, Epsilon: 0.0100, Buffer: 100000
+Episode 20000/100000, Total Reward: 29299, Epsilon: 0.0100, Buffer: 100000
+Episode 21000/100000, Total Reward: 24022, Epsilon: 0.0100, Buffer: 100000
+Episode 22000/100000, Total Reward: 32528, Epsilon: 0.0100, Buffer: 100000
+Episode 23000/100000, Total Reward: 19569, Epsilon: 0.0100, Buffer: 100000
+Episode 24000/100000, Total Reward: 37956, Epsilon: 0.0100, Buffer: 100000
+Episode 25000/100000, Total Reward: 27446, Epsilon: 0.0100, Buffer: 100000
+Episode 26000/100000, Total Reward: 29782, Epsilon: 0.0100, Buffer: 100000
+Episode 27000/100000, Total Reward: 175, Epsilon: 0.0100, Buffer: 100000
+Episode 28000/100000, Total Reward: 30625, Epsilon: 0.0100, Buffer: 100000
+Episode 29000/100000, Total Reward: 41275, Epsilon: 0.0100, Buffer: 100000
+Episode 30000/100000, Total Reward: 29049, Epsilon: 0.0100, Buffer: 100000
+Episode 31000/100000, Total Reward: 29984, Epsilon: 0.0100, Buffer: 100000
+Episode 32000/100000, Total Reward: 38296, Epsilon: 0.0100, Buffer: 100000
+Episode 33000/100000, Total Reward: 38893, Epsilon: 0.0100, Buffer: 100000
+Episode 34000/100000, Total Reward: 15861, Epsilon: 0.0100, Buffer: 100000
+Episode 35000/100000, Total Reward: 23474, Epsilon: 0.0100, Buffer: 100000
+Episode 36000/100000, Total Reward: 35024, Epsilon: 0.0100, Buffer: 100000
+Episode 37000/100000, Total Reward: 38825, Epsilon: 0.0100, Buffer: 100000
+Episode 38000/100000, Total Reward: 35528, Epsilon: 0.0100, Buffer: 100000
+Episode 39000/100000, Total Reward: 20387, Epsilon: 0.0100, Buffer: 100000
+Episode 40000/100000, Total Reward: 27252, Epsilon: 0.0100, Buffer: 100000
+Episode 41000/100000, Total Reward: 39677, Epsilon: 0.0100, Buffer: 100000
+Episode 42000/100000, Total Reward: 24716, Epsilon: 0.0100, Buffer: 100000
+Episode 43000/100000, Total Reward: 33787, Epsilon: 0.0100, Buffer: 100000
+Episode 44000/100000, Total Reward: 471, Epsilon: 0.0100, Buffer: 100000
+Episode 45000/100000, Total Reward: 39745, Epsilon: 0.0100, Buffer: 100000
+Episode 46000/100000, Total Reward: 30964, Epsilon: 0.0100, Buffer: 100000
+Episode 47000/100000, Total Reward: 14503, Epsilon: 0.0100, Buffer: 100000
+Episode 48000/100000, Total Reward: 36381, Epsilon: 0.0100, Buffer: 100000
+Episode 49000/100000, Total Reward: 35370, Epsilon: 0.0100, Buffer: 100000
+Episode 50000/100000, Total Reward: 26207, Epsilon: 0.0100, Buffer: 100000
+Episode 51000/100000, Total Reward: 30591, Epsilon: 0.0100, Buffer: 100000
+Episode 52000/100000, Total Reward: 632, Epsilon: 0.0100, Buffer: 100000
+Episode 53000/100000, Total Reward: 34195, Epsilon: 0.0100, Buffer: 100000
+Episode 54000/100000, Total Reward: 33482, Epsilon: 0.0100, Buffer: 100000
+Episode 55000/100000, Total Reward: 32710, Epsilon: 0.0100, Buffer: 100000
+Episode 56000/100000, Total Reward: 23411, Epsilon: 0.0100, Buffer: 100000
+Episode 57000/100000, Total Reward: 28230, Epsilon: 0.0100, Buffer: 100000
+Episode 58000/100000, Total Reward: 31428, Epsilon: 0.0100, Buffer: 100000
+Episode 59000/100000, Total Reward: 27919, Epsilon: 0.0100, Buffer: 100000
+Episode 60000/100000, Total Reward: 30379, Epsilon: 0.0100, Buffer: 100000
+Episode 61000/100000, Total Reward: 26923, Epsilon: 0.0100, Buffer: 100000
+Episode 62000/100000, Total Reward: 31757, Epsilon: 0.0100, Buffer: 100000
+Episode 63000/100000, Total Reward: 28021, Epsilon: 0.0100, Buffer: 100000
+Episode 64000/100000, Total Reward: 36878, Epsilon: 0.0100, Buffer: 100000
+Episode 65000/100000, Total Reward: 27509, Epsilon: 0.0100, Buffer: 100000
+Episode 66000/100000, Total Reward: 31393, Epsilon: 0.0100, Buffer: 100000
+Episode 67000/100000, Total Reward: 34110, Epsilon: 0.0100, Buffer: 100000
+Episode 68000/100000, Total Reward: 28031, Epsilon: 0.0100, Buffer: 100000
+Episode 69000/100000, Total Reward: 34754, Epsilon: 0.0100, Buffer: 100000
+Episode 70000/100000, Total Reward: 34781, Epsilon: 0.0100, Buffer: 100000
+Episode 71000/100000, Total Reward: 35051, Epsilon: 0.0100, Buffer: 100000
+Episode 72000/100000, Total Reward: 35794, Epsilon: 0.0100, Buffer: 100000
+Episode 73000/100000, Total Reward: 34475, Epsilon: 0.0100, Buffer: 100000
+Episode 74000/100000, Total Reward: 28235, Epsilon: 0.0100, Buffer: 100000
+Episode 75000/100000, Total Reward: 34686, Epsilon: 0.0100, Buffer: 100000
+Episode 76000/100000, Total Reward: 26550, Epsilon: 0.0100, Buffer: 100000
+Episode 77000/100000, Total Reward: 22860, Epsilon: 0.0100, Buffer: 100000
+Episode 78000/100000, Total Reward: 32219, Epsilon: 0.0100, Buffer: 100000
+Episode 79000/100000, Total Reward: 33698, Epsilon: 0.0100, Buffer: 100000
+Episode 80000/100000, Total Reward: 34020, Epsilon: 0.0100, Buffer: 100000
+Episode 81000/100000, Total Reward: 36126, Epsilon: 0.0100, Buffer: 100000
+Episode 82000/100000, Total Reward: 37633, Epsilon: 0.0100, Buffer: 100000
+Episode 83000/100000, Total Reward: 26671, Epsilon: 0.0100, Buffer: 100000
+Episode 84000/100000, Total Reward: 28870, Epsilon: 0.0100, Buffer: 100000
+Episode 85000/100000, Total Reward: 30263, Epsilon: 0.0100, Buffer: 100000
+Episode 86000/100000, Total Reward: 35003, Epsilon: 0.0100, Buffer: 100000
+Episode 87000/100000, Total Reward: 36992, Epsilon: 0.0100, Buffer: 100000
+Episode 88000/100000, Total Reward: 37032, Epsilon: 0.0100, Buffer: 100000
+Episode 89000/100000, Total Reward: 36164, Epsilon: 0.0100, Buffer: 100000
+Episode 90000/100000, Total Reward: 21298, Epsilon: 0.0100, Buffer: 100000
+Episode 91000/100000, Total Reward: 26696, Epsilon: 0.0100, Buffer: 100000
+Episode 92000/100000, Total Reward: 31711, Epsilon: 0.0100, Buffer: 100000
+Episode 93000/100000, Total Reward: 26390, Epsilon: 0.0100, Buffer: 100000
+Episode 94000/100000, Total Reward: 35873, Epsilon: 0.0100, Buffer: 100000
+Episode 95000/100000, Total Reward: 35969, Epsilon: 0.0100, Buffer: 100000
+Episode 96000/100000, Total Reward: 29938, Epsilon: 0.0100, Buffer: 100000
+Episode 97000/100000, Total Reward: 29071, Epsilon: 0.0100, Buffer: 100000
+Episode 98000/100000, Total Reward: 31953, Epsilon: 0.0100, Buffer: 100000
+Episode 99000/100000, Total Reward: 31603, Epsilon: 0.0100, Buffer: 100000
+Episode 100000/100000, Total Reward: 35602, Epsilon: 0.0100, Buffer: 100000
+Extracting Q-table from DQN for compatibility...
+Saved DQN model to outputs/DQN_BL_100t_model.pth
+Saved Q-table (for compatibility) to outputs/DQN_BL_100t.pkl
+
+Learned DQN Q-table (sample):
+State: (0, 0, 9, 0)
+  Action: keep, Q-value: 3991.41
+  Action: replace, Q-value: 2995.27
+State: (1, 1, 0, 0)
+  Action: keep, Q-value: 3524.81
+  Action: replace, Q-value: 2964.46
+State: (1, 1, 0, 1)
+  Action: keep, Q-value: 3133.33
+  Action: replace, Q-value: 2860.06
+State: (1, 2, 0, 0)
+  Action: keep, Q-value: 3575.91
+  Action: replace, Q-value: 2956.02
+State: (1, 2, 0, 1)
+  Action: keep, Q-value: 3054.32
+  Action: replace, Q-value: 2919.20
+State: (1, 3, 0, 0)
+  Action: keep, Q-value: 3552.27
+  Action: replace, Q-value: 2967.64
+State: (1, 3, 0, 1)
+  Action: keep, Q-value: 2990.64
+  Action: replace, Q-value: 2883.03
+State: (1, 4, 0, 0)
+  Action: keep, Q-value: 3476.86
+  Action: replace, Q-value: 2969.99
+State: (1, 4, 0, 1)
+  Action: keep, Q-value: 2916.24
+  Action: replace, Q-value: 2850.47
+State: (1, 4, 1, 0)
+  Action: keep, Q-value: 3675.83
+  Action: replace, Q-value: 2947.81
+Total states: 3289
+
+Time taken for training: 13816.92 seconds
+Average reward (last 1000 episodes): 31272.04
+--- Run ended 2026-01-29 19:55:43 ---
