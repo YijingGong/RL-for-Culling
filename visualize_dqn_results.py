@@ -20,6 +20,7 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage import uniform_filter1d
+import utility
 
 
 FIGURES_ROOT = Path("outputs") / "figures"
@@ -62,19 +63,102 @@ def load_pkl(filename: str):
     return q_table, rewards, epsilon
 
 
-def extract_q_diff_heatmap(q_table, parity: int, disease_status: int) -> np.ndarray:
-    """Return heatmap of Q(keep) - Q(replace) for a parity/disease slice."""
-    mac_range = range(21)
-    mip_range = range(13)
-    heatmap = np.full((len(mip_range), len(mac_range)), np.nan)
-    for mac in mac_range:
-        for mip in mip_range:
-            state = (parity, mac, mip, disease_status)
+def print_q_table(
+    q_table: dict,
+    max_rows: int | None = None,
+    parity_filter: int | None = None,
+    disease_filter: int | None = None,
+) -> None:
+    """Print the Q-table sorted by state; optionally filter and limit rows."""
+    rows = []
+    for state in sorted(q_table.keys()):
+        if parity_filter is not None and state[0] != parity_filter:
+            continue
+        if disease_filter is not None and state[3] != disease_filter:
+            continue
+        q_keep = q_table[state].get("keep", 0)
+        q_replace = q_table[state].get("replace", 0)
+        rows.append((state, q_keep, q_replace, q_keep - q_replace))
+
+    if max_rows is not None:
+        rows = rows[:max_rows]
+
+    print("state -> keep, replace, diff")
+    for state, q_keep, q_replace, diff in rows:
+        print(f"{state} -> {q_keep:.3f}, {q_replace:.3f}, {diff:.3f}")
+
+
+def _axis_values_from_qtable(q_table, idx: int, fallback_range) -> list:
+    """Return sorted unique values for a state index, or the fallback range."""
+    vals = sorted({state[idx] for state in q_table})
+    return vals if vals else list(fallback_range)
+
+
+def extract_q_diff_heatmap_by_parity(
+    q_table,
+    disease_status: int,
+    fixed_mip: int = 0,
+    parity_range=range(13),
+    mac_range=range(21),
+    mip_range=range(10),
+    disease_range=range(2),
+):
+    """Return heatmap (parity x MAC) of Q(keep) - Q(replace) at a fixed MIP.
+
+    Rows correspond to parity values; columns correspond to month-after-calving (MAC).
+    Impossible states (via utility.possible_state2) are masked with NaN.
+    """
+
+    parities_all = _axis_values_from_qtable(q_table, 0, parity_range)
+    parities = [p for p in parities_all if p >= 1] or [p for p in parity_range if p >= 1]
+    macs_all = _axis_values_from_qtable(q_table, 1, mac_range)
+    macs = [m for m in macs_all if m >= 1] or [m for m in mac_range if m >= 1]
+    heatmap = np.full((len(parities), len(macs)), np.nan)
+
+    for i_parity, parity in enumerate(parities):
+        for j_mac, mac in enumerate(macs):
+            state = (parity, mac, fixed_mip, disease_status)
+            if not utility.possible_state2(state, parity_range, mac_range, mip_range, disease_range):
+                continue
             if state in q_table:
                 q_keep = q_table[state].get("keep", 0)
                 q_replace = q_table[state].get("replace", 0)
-                heatmap[mip, mac] = q_keep - q_replace
-    return heatmap
+                heatmap[i_parity, j_mac] = q_keep - q_replace
+
+    return heatmap, parities, macs
+
+
+def extract_q_diff_heatmap_by_mip(
+    q_table,
+    fixed_parity: int = 1,
+    disease_status: int = 0,
+    mac_range=range(21),
+    mip_range=range(10),
+    parity_range=range(13),
+    disease_range=range(2),
+):
+    """Return heatmap (MIP x MAC) of Q(keep) - Q(replace) at a fixed parity.
+
+    Rows correspond to months-in-pregnancy (MIP); columns correspond to MAC.
+    Impossible states (via utility.possible_state2) are masked with NaN.
+    """
+
+    mips = _axis_values_from_qtable(q_table, 2, mip_range)
+    macs_all = _axis_values_from_qtable(q_table, 1, mac_range)
+    macs = [m for m in macs_all if m >= 1] or [m for m in mac_range if m >= 1]
+    heatmap = np.full((len(mips), len(macs)), np.nan)
+
+    for i_mip, mip in enumerate(mips):
+        for j_mac, mac in enumerate(macs):
+            state = (fixed_parity, mac, mip, disease_status)
+            if not utility.possible_state2(state, parity_range, mac_range, mip_range, disease_range):
+                continue
+            if state in q_table:
+                q_keep = q_table[state].get("keep", 0)
+                q_replace = q_table[state].get("replace", 0)
+                heatmap[i_mip, j_mac] = q_keep - q_replace
+
+    return heatmap, mips, macs
 
 
 def smooth_line(data, window: int = 3):
@@ -86,28 +170,29 @@ def smooth_line(data, window: int = 3):
 
 def get_scenario_name(filename: str) -> str:
     """Extract scenario identifier from filename."""
-    basename = os.path.basename(filename)
-    if "BL" in basename:
+    stem_tokens = Path(filename).stem.upper().split("_")
+    if {"BL", "BASELINE", "2025"} & set(stem_tokens):
         return "Baseline"
-    if "OG" in basename:
-        return "Optimized Green"
-    if "OB" in basename:
-        return "Optimized Blue"
-    if "UG" in basename:
-        return "Unknown Green"
-    if "UB" in basename:
-        return "Unknown Blue"
+    if "OG" in stem_tokens:
+        return "Oversupply, Good Market"
+    if "OB" in stem_tokens:
+        return "Oversupply, Bad Market"
+    if "UG" in stem_tokens:
+        return "Undersupply, Good Market"
+    if "UB" in stem_tokens:
+        return "Undersupply, Bad Market"
+    basename = os.path.basename(filename)
     return basename.replace("_dqn.pkl", "").replace(".pkl", "")
 
 
 def get_scenario_color(scenario_name: str) -> str:
     """Map scenario names to consistent colors."""
     colors = {
-        "Baseline": "#5DA5DA",
-        "Optimized Blue": "#FAA43A",
-        "Optimized Green": "#60BD68",
-        "Unknown Blue": "#F17CB0",
-        "Unknown Green": "#B276B2",
+        "Baseline": "#7A7A7A",
+        "Oversupply, Bad Market": "#FAA43A",
+        "Oversupply, Good Market": "#60BD68",
+        "Undersupply, Bad Market": "#F17CB0",
+        "Undersupply, Good Market": "#B276B2",
     }
     return colors.get(scenario_name, "#999999")
 
@@ -251,17 +336,17 @@ def _create_combined_overview(q_table, rewards, scenario_name: str, smooth: bool
 
     # Heatmap (middle row, center)
     ax_heatmap = fig.add_subplot(gs[1, 1])
-    heatmap = extract_q_diff_heatmap(q_table, parity=1, disease_status=0)
+    heatmap, parities, macs = extract_q_diff_heatmap_by_parity(q_table, disease_status=0, fixed_mip=0)
     vmax = np.nanmax(np.abs(heatmap)) if np.any(~np.isnan(heatmap)) else 1
     im = ax_heatmap.imshow(heatmap, aspect="auto", cmap="RdYlGn", origin="lower",
                            vmin=-vmax, vmax=vmax)
     ax_heatmap.set_xlabel("Month After Calving (MAC)", fontsize=12)
     ax_heatmap.set_ylabel("Parity", fontsize=12)
-    ax_heatmap.set_title(f"{scenario_name}\n(Healthy, Non-pregnant Cows)", fontsize=14, fontweight="bold")
-    ax_heatmap.set_xticks(np.arange(0, 21, 2))
-    ax_heatmap.set_xticklabels(np.arange(0, 21, 2))
-    ax_heatmap.set_yticks(np.arange(0, 13, 1))
-    ax_heatmap.set_yticklabels(np.arange(0, 13, 1))
+    ax_heatmap.set_title(f"{scenario_name}\n(Open Cows, Healthy)", fontsize=14, fontweight="bold")
+    ax_heatmap.set_xticks(np.arange(len(macs)))
+    ax_heatmap.set_xticklabels(macs)
+    ax_heatmap.set_yticks(np.arange(len(parities)))  # Adjusted to match the number of parities
+    ax_heatmap.set_yticklabels(parities)
     cbar = fig.colorbar(im, ax=ax_heatmap)
     cbar.set_label("Q-value\n(Keep - Replace)", fontsize=11)
     if np.any(~np.isnan(heatmap)):
@@ -338,9 +423,9 @@ def plot_single_scenario(filename: str, smooth: bool = True) -> None:
 
     save_panel(fig_conv, "reward_convergence")
 
-    # Confidence heatmap -------------------------------------------------
+    # Confidence heatmap (parity x MAC, MIP fixed) ----------------------
     fig_heat, ax_heatmap = plt.subplots(figsize=(9, 7))
-    heatmap = extract_q_diff_heatmap(q_table, parity=1, disease_status=0)
+    heatmap, parities, macs = extract_q_diff_heatmap_by_parity(q_table, disease_status=0, fixed_mip=0)
     if np.any(~np.isnan(heatmap)):
         vmax = np.nanmax(np.abs(heatmap))
     else:
@@ -350,11 +435,11 @@ def plot_single_scenario(filename: str, smooth: bool = True) -> None:
 
     ax_heatmap.set_xlabel("Month After Calving (MAC)", fontsize=12)
     ax_heatmap.set_ylabel("Parity", fontsize=12)
-    ax_heatmap.set_title(f"{scenario_name}\n(Healthy, Non-pregnant Cows)", fontsize=14, fontweight="bold")
-    ax_heatmap.set_xticks(np.arange(0, 21, 2))
-    ax_heatmap.set_xticklabels(np.arange(0, 21, 2))
-    ax_heatmap.set_yticks(np.arange(0, 13, 1))
-    ax_heatmap.set_yticklabels(np.arange(0, 13, 1))
+    ax_heatmap.set_title(f"{scenario_name}\n(MIP = 0, Healthy)", fontsize=14, fontweight="bold")
+    ax_heatmap.set_xticks(np.arange(len(macs)))
+    ax_heatmap.set_xticklabels(macs)
+    ax_heatmap.set_yticks(np.arange(len(parities)))
+    ax_heatmap.set_yticklabels(parities)
 
     cbar = fig_heat.colorbar(im, ax=ax_heatmap)
     cbar.set_label("Q-value\n(Keep - Replace)", fontsize=11)
@@ -365,7 +450,36 @@ def plot_single_scenario(filename: str, smooth: bool = True) -> None:
                         fontsize=10, verticalalignment="top",
                         bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
 
-    save_panel(fig_heat, "heatmap_parity1_healthy")
+    save_panel(fig_heat, "heatmap_open_healthy")
+
+    # Confidence heatmap (MIP x MAC, parity fixed) ----------------------
+    fig_heat_mip, ax_heatmap_mip = plt.subplots(figsize=(9, 7))
+    heatmap_mip, mips, macs_mip = extract_q_diff_heatmap_by_mip(q_table, fixed_parity=1, disease_status=0)
+    if np.any(~np.isnan(heatmap_mip)):
+        vmax_mip = np.nanmax(np.abs(heatmap_mip))
+    else:
+        vmax_mip = 1
+    im_mip = ax_heatmap_mip.imshow(heatmap_mip, aspect="auto", cmap="RdYlGn", origin="lower",
+                                   vmin=-vmax_mip, vmax=vmax_mip)
+
+    ax_heatmap_mip.set_xlabel("Month After Calving (MAC)", fontsize=12)
+    ax_heatmap_mip.set_ylabel("Month In Pregnancy (MIP)", fontsize=12)
+    ax_heatmap_mip.set_title(f"{scenario_name}\n(Parity = 1, Healthy)", fontsize=14, fontweight="bold")
+    ax_heatmap_mip.set_xticks(np.arange(len(macs_mip)))
+    ax_heatmap_mip.set_xticklabels(macs_mip)
+    ax_heatmap_mip.set_yticks(np.arange(len(mips)))
+    ax_heatmap_mip.set_yticklabels(mips)
+
+    cbar_mip = fig_heat_mip.colorbar(im_mip, ax=ax_heatmap_mip)
+    cbar_mip.set_label("Q-value\n(Keep - Replace)", fontsize=11)
+
+    if np.any(~np.isnan(heatmap_mip)):
+        range_text_mip = f"Range: [{np.nanmin(heatmap_mip):.0f}, {np.nanmax(heatmap_mip):.0f}]"
+        ax_heatmap_mip.text(0.02, 0.98, range_text_mip, transform=ax_heatmap_mip.transAxes,
+                            fontsize=10, verticalalignment="top",
+                            bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
+
+    save_panel(fig_heat_mip, "heatmap_mip_parity1_healthy")
 
     # Q-value difference line plots - CORRECTED VERSION ------------------
     configs = [
@@ -374,6 +488,17 @@ def plot_single_scenario(filename: str, smooth: bool = True) -> None:
         (2, 0, "Parity 2, Healthy"),
         (2, 1, "Parity 2, Sick (Mastitis)"),
         (3, 0, "Parity 3, Healthy"),
+        (3, 1, "Parity 3, Sick (Mastitis)"),
+        (4, 0, "Parity 4, Healthy"),
+        (4, 1, "Parity 4, Sick (Mastitis)"),
+        (5, 0, "Parity 5, Healthy"),
+        (5, 1, "Parity 5, Sick (Mastitis)"),
+        (10, 0, "Parity 10, Healthy"),
+        (10, 1, "Parity 10, Sick (Mastitis)"),
+        (11, 0, "Parity 11, Healthy"),
+        (11, 1, "Parity 11, Sick (Mastitis)"),
+        (12, 0, "Parity 12, Healthy"),
+        (12, 1, "Parity 12, Sick (Mastitis)"),
     ]
 
     for parity, disease, title in configs:
@@ -510,12 +635,15 @@ def main():
     if args.mode == "single":
         if not args.file:
             parser.error("--file is required for single mode")
+        q_table, _, _ = load_pkl(args.file)
+        print_q_table(q_table, max_rows=500, parity_filter=1, disease_filter=0)
         plot_single_scenario(args.file, smooth=smooth)
     
     elif args.mode == "multi":
         if not args.files or len(args.files) < 2:
             parser.error("--files requires at least 2 .pkl files for multi mode")
         plot_multi_scenario(args.files, smooth=smooth)
+
 
 
 if __name__ == "__main__":

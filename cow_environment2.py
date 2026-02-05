@@ -5,7 +5,7 @@ import random
 import utility
 # Dynamic import based on scenario - modified to support command-line selection
 # Default scenario is '2025' if not specified
-_scenario = '2025'  # Default scenario
+_scenario = None  # Will be set on first call to set_scenario()
 animal_constants = None  # Will be set by set_scenario()
 
 def set_scenario(scenario='2025'):
@@ -15,6 +15,11 @@ def set_scenario(scenario='2025'):
         scenario (str): One of '2025', 'OG', 'OB', 'UG', 'UB'
     """
     global animal_constants, _scenario
+    
+    # Only load if scenario is different or not yet loaded
+    if _scenario == scenario and animal_constants is not None:
+        return animal_constants
+    
     _scenario = scenario
     
     scenario_map = {
@@ -33,8 +38,15 @@ def set_scenario(scenario='2025'):
     print(f"Loaded scenario: {scenario} (module: {module_name})")
     return animal_constants
 
-# Initialize with default scenario
-set_scenario(_scenario)
+def _ensure_scenario_loaded():
+    """Ensure a scenario is loaded. If none set, load default '2025'."""
+    global animal_constants
+    if animal_constants is None:
+        set_scenario('2025')
+
+# Note: No automatic initialization here. 
+# Scenario will be set by command-line argument in dqn_learning.py
+# or by calling set_scenario() explicitly.
 
 class CowEnv:
     def __init__(self, parity_range, mac_range, mip_range, disease_range):
@@ -56,6 +68,9 @@ class CowEnv:
 
     def reset(self):
         """Sample a random valid state with realistic disease prevalence."""
+        # Ensure scenario is loaded before using animal_constants
+        _ensure_scenario_loaded()
+        
         # Sample parity, MAC, MIP uniformly
         parity = random.choice(self.parity_range)
         mac = random.choice(self.mac_range)
@@ -92,6 +107,9 @@ class CowEnv:
         Returns:
             tuple[tuple[int, int, int, int], float]: Next state and scalar reward.
         """
+        # Ensure scenario is loaded before using animal_constants
+        _ensure_scenario_loaded()
+        
         slaughter_income = 0
         calf_income = 0
         milk_income = 0

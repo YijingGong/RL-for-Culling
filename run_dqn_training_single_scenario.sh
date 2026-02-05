@@ -11,7 +11,7 @@ NUM_RUNS=5
 OUTPUT_DIR="outputs"
 
 # Scenario to run (change this to: 2025, OG, OB, UG, or UB)
-SCENARIO="2025"
+SCENARIO="UB"
 
 # Navigate to project directory
 cd "$PROJECT_DIR" || { echo "Error: Could not navigate to $PROJECT_DIR"; exit 1; }
