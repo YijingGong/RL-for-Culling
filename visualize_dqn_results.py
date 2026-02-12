@@ -489,16 +489,16 @@ def plot_single_scenario(filename: str, smooth: bool = True) -> None:
         (2, 1, "Parity 2, Sick (Mastitis)"),
         (3, 0, "Parity 3, Healthy"),
         (3, 1, "Parity 3, Sick (Mastitis)"),
-        (4, 0, "Parity 4, Healthy"),
-        (4, 1, "Parity 4, Sick (Mastitis)"),
-        (5, 0, "Parity 5, Healthy"),
-        (5, 1, "Parity 5, Sick (Mastitis)"),
-        (10, 0, "Parity 10, Healthy"),
-        (10, 1, "Parity 10, Sick (Mastitis)"),
-        (11, 0, "Parity 11, Healthy"),
-        (11, 1, "Parity 11, Sick (Mastitis)"),
-        (12, 0, "Parity 12, Healthy"),
-        (12, 1, "Parity 12, Sick (Mastitis)"),
+        # (4, 0, "Parity 4, Healthy"),
+        # (4, 1, "Parity 4, Sick (Mastitis)"),
+        # (5, 0, "Parity 5, Healthy"),
+        # (5, 1, "Parity 5, Sick (Mastitis)"),
+        # (10, 0, "Parity 10, Healthy"),
+        # (10, 1, "Parity 10, Sick (Mastitis)"),
+        # (11, 0, "Parity 11, Healthy"),
+        # (11, 1, "Parity 11, Sick (Mastitis)"),
+        # (12, 0, "Parity 12, Healthy"),
+        # (12, 1, "Parity 12, Sick (Mastitis)"),
     ]
 
     for parity, disease, title in configs:
@@ -636,7 +636,9 @@ def main():
         if not args.file:
             parser.error("--file is required for single mode")
         q_table, _, _ = load_pkl(args.file)
-        print_q_table(q_table, max_rows=500, parity_filter=1, disease_filter=0)
+        print_q_table(q_table, max_rows=100, parity_filter=1, disease_filter=0)
+        print_q_table(q_table, max_rows=100, parity_filter=11, disease_filter=0)
+        print_q_table(q_table, max_rows=200, parity_filter=12, disease_filter=0)
         plot_single_scenario(args.file, smooth=smooth)
     
     elif args.mode == "multi":

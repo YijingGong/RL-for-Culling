@@ -16,11 +16,11 @@ Usage:
 
     python visualize_dqn_multi_runs.py \
         --scenario-files \
-        2025:outputs/DQN_2025_500k_run1.pkl,outputs/DQN_2025_500k_run2.pkl,outputs/DQN_2025_500k_run3.pkl \
-        OG:outputs/DQN_OG_500k_run1.pkl,outputs/DQN_OG_500k_run2.pkl,outputs/DQN_OG_500k_run3.pkl \
-        OB:outputs/DQN_OB_500k_run1.pkl,outputs/DQN_OB_500k_run2.pkl,outputs/DQN_OB_500k_run3.pkl \
-        UG:outputs/DQN_UG_500k_run1.pkl,outputs/DQN_UG_500k_run2.pkl,outputs/DQN_UG_500k_run3.pkl \
-        UB:outputs/DQN_UB_500k_run1.pkl,outputs/DQN_UB_500k_run2.pkl,outputs/DQN_UB_500k_run3.pkl
+        2025:outputs/DQN_2025_500k_run1.pkl,outputs/DQN_2025_500k_run2.pkl,outputs/DQN_2025_500k_run3.pkl,outputs/DQN_2025_500k_run4.pkl \
+        OG:outputs/DQN_OG_500k_run1.pkl,outputs/DQN_OG_500k_run2.pkl,outputs/DQN_OG_500k_run3.pkl,outputs/DQN_OG_500k_run4.pkl \
+        OB:outputs/DQN_OB_500k_run1.pkl,outputs/DQN_OB_500k_run2.pkl,outputs/DQN_OB_500k_run3.pkl,outputs/DQN_OB_500k_run4.pkl \
+        UG:outputs/DQN_UG_500k_run1.pkl,outputs/DQN_UG_500k_run2.pkl,outputs/DQN_UG_500k_run3.pkl,outputs/DQN_UG_500k_run4.pkl \
+        UB:outputs/DQN_UB_500k_run1.pkl,outputs/DQN_UB_500k_run2.pkl,outputs/DQN_UB_500k_run3.pkl,outputs/DQN_UB_500k_run4.pkl
 """
 
 import argparse

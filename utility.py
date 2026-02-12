@@ -18,7 +18,7 @@ def possible_state(state, parity_range, mim_range, mip_range, disease_range):
                     return False
     return True
 
-def possible_state2(state, parity_range, mac_range, mip_range, disease_range):
+def possible_state2(state, parity_range, mac_range, mip_range, disease_range, dnb_min=3, dnb_max=10):
     if not (state[0] in parity_range and state[1] in mac_range and state[2] in mip_range and state[3] in disease_range):
         return False
     if state[0] == 0: # only springer valid if parity == 0
@@ -28,7 +28,8 @@ def possible_state2(state, parity_range, mac_range, mip_range, disease_range):
         if state[1] == 0: # mac cannot be 0 besides (0,0,9)
             return False
         if state[2] != 0: # preg
-            if state[1] < state[2]+3: # not possible mim < mip+3 because start breeding during third month
+            breeding_mac = state[1] - state[2]
+            if breeding_mac < dnb_min or breeding_mac > dnb_max:
                 return False
     return True
 

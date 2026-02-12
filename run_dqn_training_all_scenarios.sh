@@ -8,7 +8,7 @@
 PROJECT_DIR="/Users/yijinggong/Library/CloudStorage/Box-Box/phd/RL-for-Culling"
 CONDA_ENV="rl_culling"
 EPISODES=500000
-NUM_RUNS=5
+NUM_RUNS=1
 OUTPUT_DIR="outputs"
 
 # Scenarios to run
@@ -52,12 +52,12 @@ for scenario in "${SCENARIOS[@]}"; do
         echo "=========================================="
         echo "Scenario: $scenario | Run $i of $NUM_RUNS"
         echo "Timestamp: $(date)"
-        echo "Output file: ${OUTPUT_DIR}/DQN_${scenario}_500k_run${i}.pkl"
+        echo "Output file: ${OUTPUT_DIR}/DQN_${scenario}_500k_parity12forcecull_run${i}.pkl"
         echo "=========================================="
         
         # Run the training with the scenario parameter
         python dqn_learning.py \
-            --filename "${OUTPUT_DIR}/DQN_${scenario}_500k_run${i}.pkl" \
+            --filename "${OUTPUT_DIR}/DQN_${scenario}_500k_parity12forcecull_run${i}.pkl" \
             --episodes $EPISODES \
             --scenario $scenario
         

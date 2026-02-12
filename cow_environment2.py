@@ -86,7 +86,7 @@ class CowEnv:
         
         # Ensure valid state
         while not utility.possible_state2(self.state, self.parity_range, self.mac_range, 
-                                        self.mip_range, self.disease_range):
+                                        self.mip_range, self.disease_range, dnb_min=3, dnb_max=10):
             parity = random.choice(self.parity_range)
             mac = random.choice(self.mac_range)
             mip = random.choice(self.mip_range)
@@ -121,9 +121,9 @@ class CowEnv:
 
         if action == 'replace':
             slaughter_income = self.calculate_slaughter_income(parity, disease) 
-            self.state = (0, 0, 9, 0) # replaced by a new springer
-            feed_cost = self.calculate_feed_cost(self.state[0], self.state[1], self.state[2], self.state[3])
+            feed_cost = self.calculate_feed_cost(parity, mac, mip, disease) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
             reward = slaughter_income - animal_constants.REPLACEMENT_COST - feed_cost
+            self.state = (0, 0, 9, 0) # replaced by a new springer
             # print(">replace")
             # print("slaughter_income:", slaughter_income, "replacement_cost", animal_constants.REPLACEMENT_COST )
         else: # 'keep' 
@@ -136,9 +136,9 @@ class CowEnv:
             if self.death_status(parity, disease): # died
                 # print(">keep died")
                 slaughter_income = 0 # it's 0 because it is a dead cow
-                self.state = (0, 0, 9, 0) # replaced by a new springer
-                feed_cost = self.calculate_feed_cost(self.state[0], self.state[1], self.state[2], self.state[3])
+                feed_cost = self.calculate_feed_cost(parity, mac, mip, disease) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
                 reward = slaughter_income - animal_constants.REPLACEMENT_COST - feed_cost
+                self.state = (0, 0, 9, 0) # replaced by a new springer
                 # print("slaughter_income:", slaughter_income, "replacement_cost", animal_constants.REPLACEMENT_COST )
             else:
                 # milking
@@ -148,11 +148,21 @@ class CowEnv:
                 # pregnancy status
                 if mip == 9: # calving
                     calf_income = animal_constants.CALF_PRICE
-                    next_parity = parity+1
+                    next_parity = parity + 1
                     next_mac = 1
                     next_mip = 0
+
+                    # --- reaching max Parity check ---
+                    # If the cow has reached the maximum parity in the model, she is assumed to be dead after calving and replaced by a new springer.
+                    if next_parity > max(self.parity_range):
+                        slaughter_income = 0
+                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+                        reward = (milk_income + calf_income + slaughter_income # only calf income is non-zero, because this old cow is currently dry and  dead after calving
+                                  - animal_constants.REPLACEMENT_COST - feed_cost)
+                        self.state = (0, 0, 9, 0)  # replaced by a new springer
+                        return self.state, reward
                 elif mip == 0: # breeding
-                    if mac>=3:
+                    if mac>=3 and mac<=10: # DNB = 10 month
                         breed_cost = animal_constants.BREED_COST_PER_INSEM  
                         if self.breed_success(parity, mac, disease) == True:
                             next_mip = 1
@@ -173,10 +183,27 @@ class CowEnv:
                         next_disease = 1 # become sick
                     else:
                         next_disease = 0 #remain healthy
+                
+                # reaching max MAC check (2 cases: dead after max MAC if already max parity; alive but replaced after max MAC if not yet max parity)
+                if next_mac > max(self.mac_range):
+                    if parity == max(self.parity_range): # if the cow has already reached max parity, she is assumed to be dead after max MAC and replaced by a new springer
+                        slaughter_income = 0
+                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+                        reward = (milk_income + calf_income + slaughter_income # only milk income is non-zero, because this old cow is currently non-pregnant and milking and dead after MAC > max MAC
+                                    - animal_constants.REPLACEMENT_COST - feed_cost)
+                        self.state = (0, 0, 9, 0)  # replaced by a new springer
+                        return self.state, reward
+                    else: # if the cow has not yet reached max parity, she is assumed to be alive but replaced by a new springer after max MAC 
+                        slaughter_income = self.calculate_slaughter_income(parity, disease) 
+                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+                        reward = (milk_income + calf_income + slaughter_income
+                                    - animal_constants.REPLACEMENT_COST - feed_cost)
+                        self.state = (0, 0, 9, 0)  # replaced by a new springer
+                        return self.state, reward
 
-                self.state = (next_parity, next_mac, next_mip, next_disease)
-                feed_cost = self.calculate_feed_cost(self.state[0], self.state[1], self.state[2], self.state[3])
+                feed_cost = self.calculate_feed_cost(parity, mac, mip, disease) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
                 reward = milk_income + calf_income - breed_cost - treatment_cost - feed_cost
+                self.state = (next_parity, next_mac, next_mip, next_disease)
                 # print(">keep not died")
                 # print("milk income:", milk_income, "calf_income:", calf_income, "breed_cost", breed_cost, "treatment_cost",treatment_cost)
         # print("one reward:", reward)
@@ -251,7 +278,7 @@ class CowEnv:
         Returns:
             float: Estimated monthly milk production (kg/month).
         """
-        if mac == 0 or mip == 7 or mip == 8 or mip == 9: # springer or dry cow
+        if mac == 0 or mip == 8 or mip == 9: # springer or dry cow (month 8 and 9, DIM = 240-270)
             return 0
         self.parameter_a, self.parameter_b, self.parameter_c = self.assign_woods_parameters(parity)
         dim = (mac-1)*30 + 1
