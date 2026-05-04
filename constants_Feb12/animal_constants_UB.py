@@ -1,9 +1,8 @@
 ### Economic parameters for dairy cattle in 2025 ###
 # Milk prices
-MILK_PRICE = 15.0 # per cwt, average of 2024 Nov to 2025 Oct (12 months) from USDA uniform milk price https://mymarketnews.ams.usda.gov/filerepo/sites/default/files/3351/2025-11-01/1293713/ams_3351_00065.pdf 
+MILK_PRICE = 15 # per cwt, average of 2024 Nov to 2025 Oct (12 months) from USDA uniform milk price https://mymarketnews.ams.usda.gov/filerepo/sites/default/files/3351/2025-11-01/1293713/ams_3351_00065.pdf 
 # Feed cost
 FEED_COST = 0.29 # unit: kg of DM (https://www.sciencedirect.com/science/article/pii/S0022030224007811#:~:text=Marginal%20Revenue%20and%20Cost,by%20the%20differing%20regression%20estimates)
-
 # Replacement cost
 REPLACEMENT_COST = 4135 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
 # Calf price
@@ -16,11 +15,11 @@ BREED_COST_PER_INSEM = 30 # estimated from 1) Manfei repro paper: https://www.sc
 
 ### Transitional probabilities and other parameters ###
 # Reproduction
-CONCEPTION_RATE = {1: 0.34, 2: 0.3, 3: 0.29, 4: 0.28, 5: 0.26, 6: 0.24, 7: 0.22, 8: 0.20, 9: 0.18, 10: 0.16, 11: 0.14, 12: 0.12} #https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1297&context=usdaarsfacpub&utm_source=chatgpt.com (Table 7), extrapolate for parity 7-12 by assuming a drop of 0.02 per parity after parity 6.
+CONCEPTION_RATE = {1: 0.34, 2: 0.3, 3: 0.29, 4: 0.28, 5: 0.26, 6: 0.24, 7: 0.24, 8: 0.24, 9: 0.24, 10: 0.24, 11: 0.24, 12: 0.24} #https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1297&context=usdaarsfacpub&utm_source=chatgpt.com (Table 7)
 CONCEPTION_RATE_DROP = 0.02 # on average, drop 2% per insemination, https://digitalcommons.unl.edu/cgi/viewcontent.cgi?article=1297&context=usdaarsfacpub&utm_source=chatgpt.com (Table 7)
 
 # Death
-DEATH_RATE = [0, 0.1725, 0.2244, 0.3154, 0.3725, 0.4117, 0.4949, 0.5072, 0.5496, 0.5940, 0.6386, 0.6834, 0.7285] #unit: %; https://www.sciencedirect.com/science/article/pii/S0022030208710865 #Table 2
+DEATH_RATE = [0, 2.05, 2.66, 3.72, 4.38, 4.83, 5.78, 5.92, 6.40, 6.40, 6.40, 6.40, 6.40] #unit: %; https://www.sciencedirect.com/science/article/pii/S0022030208710865 #Table 2
 
 # # General Disease
 # DISEASE_RISK = [0, 0.15, 0.18, 0.2, 0.2, 0.23, 0.25, 0.28, 0.3, 0.3, 0.32, 0.35, 0.35] # from health to sick per month by parity
@@ -35,7 +34,7 @@ DEATH_RATE = [0, 0.1725, 0.2244, 0.3154, 0.3725, 0.4117, 0.4949, 0.5072, 0.5496,
 
 # Disease - Mastitis
 MASTITIS_TREATMENT_COST_PER_MONTH = 78 # https://www.sciencedirect.com/science/article/pii/S0022030216308992#tbl8
-MASTITIS_DISEASE_RISK = [0, 0.02, 0.027, 0.045, 0.0495, 0.0545, 0.0600, 0.0660, 0.0726, 0.0799, 0.0879, 0.0967, 0.1064] # https://www.sciencedirect.com/science/article/pii/S0022030294772398 -> convert from "the incidence rates of
+MASTITIS_DISEASE_RISK = [0, 0.02, 0.027, 0.045, 0.045, 0.045, 0.045, 0.045, 0.045, 0.045, 0.045, 0.045, 0.045] # https://www.sciencedirect.com/science/article/pii/S0022030294772398 -> convert from "the incidence rates of
                                                                                                         # clinical mastitis in the period from 1 wk before
                                                                                                         # calving until 10 mo after calving were 6.6,9.0,
                                                                                                         # and 14.7 cases per 10,OOO cow days at risk for
@@ -58,5 +57,9 @@ MASTITIS_SICK_CONCEPTION_RATE_MULTIPLIER = 0.68 #https://www.sciencedirect.com/s
                                                 # multiplier = 0.203/0.3 = 0.677
 
 # Lactation curve
-WOODS_PARAMETERS = [[15.72, 22.06, 21.92], [0.2433, 0.235, 0.2627], [0.002445, 0.003642, 0.004041]] # [a], [b], and [c], each list have 3 values for parity 1, 2, and 3+, based on Manfei 2022 paper. Mean + parity adjustment
-MILK_PRODUCTION_DISCOUNT_FACTOR_FROM_P3_DICTIONARY={4: 1.035, 5: 1.049, 6: 1.046, 7: 1.036, 8: 1.018, 9: 0.995, 10: 0.957, 11: 0.918, 12: 0.88} # same lactation curve shape as P3+ above, but different height (https://www.sciencedirect.com/science/article/pii/S2666910225000924?via%3Dihub#tbl1fn1) they have P1 to P10, P11 and P12 are estimated by extrapolation. 
+WOODS_PARAMETERS = [[15.72, 22.06, 21.92], [0.2433, 0.235, 0.2627], [0.002445, 0.003642, 0.004041]] # [a], [b], and [c], each list have 3 values for 3 parity, based on Manfei 2022 paper. Mean + parity adjustment
+
+### For later use
+# if we want to differentiate bull calf and heifer calf price (we can also keep heifer and calculate a shadow price for them)
+# MALE_CALF_PRICE = 804 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957
+# FEMALE_CALF_PRICE = 742 # per hd, average of 2024 Nov to 2025 Oct (12 months) from USDA https://mymarketnews.ams.usda.gov/viewReport/2957

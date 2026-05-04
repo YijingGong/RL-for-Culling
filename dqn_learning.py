@@ -2,13 +2,13 @@
 Deep Q-Network (DQN) implementation for dairy cow replacement decisions.
 Compatible interface with q_learning.py - can be run with same command-line arguments.
 
-Usage: python dqn_learning.py --filename outputs/dqn_policy.pkl --episodes 1000000
+Usage:
+    python dqn_learning.py --filename outputs/DQN_2025_seed42.pkl --episodes 500000 --scenario 2025 --seed 42
 """
 
 import argparse
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 import pickle
 import os
 import sys
@@ -25,6 +25,20 @@ mim_range = range(21)
 mip_range = range(10)
 disease_range = range(2)
 
+
+def set_all_seeds(seed):
+    """Set random seeds for full reproducibility."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    # Make PyTorch deterministic
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    print(f"All random seeds set to {seed}")
+
+
 # DQN Network Architecture
 class DQN(nn.Module):
     """Deep Q-Network with 2 hidden layers"""
@@ -38,6 +52,7 @@ class DQN(nn.Module):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         return self.fc3(x)
+
 
 # Experience Replay Buffer
 class ReplayBuffer:
@@ -54,9 +69,11 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.buffer)
 
+
 def state_to_tensor(state):
     """Convert state tuple (parity, mac, mip, disease) to tensor"""
     return torch.FloatTensor(list(state))
+
 
 def dqn_learning(env, policy_net, target_net, optimizer, replay_buffer, rewards_per_episode, 
                  num_episodes, max_steps, gamma=0.95, epsilon=1.0, epsilon_decay=0.995, 
@@ -64,26 +81,6 @@ def dqn_learning(env, policy_net, target_net, optimizer, replay_buffer, rewards_
                  learning_start=1000):
     """
     DQN training loop - compatible interface with q_learning()
-    
-    Args:
-        env: Environment instance
-        policy_net: Policy network (DQN)
-        target_net: Target network (DQN)
-        optimizer: PyTorch optimizer
-        replay_buffer: Experience replay buffer
-        rewards_per_episode: List to store episode rewards
-        num_episodes: Number of training episodes
-        max_steps: Maximum steps per episode
-        gamma: Discount factor
-        epsilon: Initial exploration rate
-        epsilon_decay: Epsilon decay rate per episode
-        min_epsilon: Minimum epsilon
-        batch_size: Batch size for training
-        target_update_freq: Frequency to update target network
-        learning_start: Start learning after this many steps
-    
-    Returns:
-        policy_net, rewards_per_episode, epsilon (compatible with q_learning)
     """
     
     action_map = {'keep': 0, 'replace': 1}
@@ -145,6 +142,7 @@ def dqn_learning(env, policy_net, target_net, optimizer, replay_buffer, rewards_
     
     return policy_net, rewards_per_episode, epsilon
 
+
 def train_dqn(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma):
     """Train DQN on a batch of experiences"""
     if len(replay_buffer) < batch_size:
@@ -175,6 +173,7 @@ def train_dqn(policy_net, target_net, optimizer, replay_buffer, batch_size, gamm
     loss.backward()
     optimizer.step()
 
+
 def extract_q_table_from_dqn(policy_net, env):
     """
     Extract Q-table from trained DQN for compatibility with analysis scripts.
@@ -199,6 +198,7 @@ def extract_q_table_from_dqn(policy_net, env):
                         q_table[state] = {'keep': q_keep, 'replace': q_replace}
     
     return q_table
+
 
 def ensure_directory(path):
     """Create the parent directory for a file path if it is missing."""
@@ -254,6 +254,7 @@ class StreamLogger:
         if self._log_file is not None:
             self._log_file.flush()
 
+
 def save_dqn_model(policy_net, rewards_per_episode, epsilon, filename):
     """
     Save DQN model and extract Q-table for compatibility.
@@ -280,15 +281,11 @@ def save_dqn_model(policy_net, rewards_per_episode, epsilon, filename):
     print(f"Saved DQN model to {model_filename}")
     print(f"Saved Q-table (for compatibility) to {filename}")
 
+
 def load_or_create_dqn(filename, env, force_restart=False):
     """
     Load existing DQN model or create new one.
     Returns policy_net, target_net, optimizer, replay_buffer, rewards_per_episode, epsilon
-    
-    Args:
-        filename: Path to save/load model
-        env: Environment instance
-        force_restart: If True, ignore existing model and start fresh
     """
     model_filename = filename.replace('.pkl', '_model.pth')
     
@@ -329,10 +326,10 @@ def load_or_create_dqn(filename, env, force_restart=False):
     
     return policy_net, target_net, optimizer, replay_buffer, rewards_per_episode, epsilon
 
-def _run_dqn_pipeline(filename, num_episodes, force_restart):
-    """Execute the DQN training workflow previously hosted in main."""
+
+def _run_dqn_pipeline(filename, num_episodes, force_restart, seed):
+    """Execute the DQN training workflow."""
     # Check NumPy version
-    import numpy as np
     numpy_version = np.__version__
     if numpy_version.startswith('2.'):
         print("\n" + "="*70)
@@ -343,6 +340,9 @@ def _run_dqn_pipeline(filename, num_episodes, force_restart):
         print("Recommended: pip install 'numpy<2'")
         print("="*70 + "\n")
     
+    # Set seeds for reproducibility
+    set_all_seeds(seed)
+    
     # Initialize environment
     env = cow_environment2.CowEnv(parity_range, mim_range, mip_range, disease_range)
     
@@ -352,6 +352,7 @@ def _run_dqn_pipeline(filename, num_episodes, force_restart):
     
     # Train
     print(f"Starting DQN training for {num_episodes} episodes...")
+    print(f"Random seed: {seed}")
     start_time = time.time()
     
     policy_net, rewards_per_episode, epsilon = dqn_learning(
@@ -384,7 +385,7 @@ def _run_dqn_pipeline(filename, num_episodes, force_restart):
     # Print sample Q-values
     print("\nLearned DQN Q-table (sample):")
     for i, (state, actions) in enumerate(q_table.items()):
-        if i >= 10:  # Print fewer samples than q_learning.py
+        if i >= 10:
             break
         print(f"State: {state}")
         for action, value in actions.items():
@@ -394,16 +395,17 @@ def _run_dqn_pipeline(filename, num_episodes, force_restart):
     print(f"Average reward (last 1000 episodes): {np.mean(rewards_per_episode[-1000:]):.2f}")
 
 
-def main(filename, num_episodes, force_restart=False):
+def main(filename, num_episodes, force_restart=False, seed=42):
     """Entry point that wraps training with a tee logger."""
     base, _ = os.path.splitext(filename)
     log_path = f"{base}_run.log"
     logger = StreamLogger(log_path)
     logger.start()
     try:
-        _run_dqn_pipeline(filename, num_episodes, force_restart)
+        _run_dqn_pipeline(filename, num_episodes, force_restart, seed)
     finally:
         logger.stop()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RL for Culling - DQN runner")
@@ -427,12 +429,18 @@ if __name__ == "__main__":
         "--scenario",
         type=str,
         default="2025",
-        choices=["2025", "OG", "OB", "UG", "UB"],
+        choices=["2025", "2025_updated", "OG", "OB", "UG", "UB"],
         help="Scenario to use for animal constants (default: 2025)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility (default: 42)",
     )
     args = parser.parse_args()
     
     # Set the scenario before running main
     cow_environment2.set_scenario(args.scenario)
     
-    main(args.filename, args.episodes, force_restart=args.restart)
+    main(args.filename, args.episodes, force_restart=args.restart, seed=args.seed)

@@ -52,12 +52,12 @@ for scenario in "${SCENARIOS[@]}"; do
         echo "=========================================="
         echo "Scenario: $scenario | Run $i of $NUM_RUNS"
         echo "Timestamp: $(date)"
-        echo "Output file: ${OUTPUT_DIR}/DQN_${scenario}_500k_parity12forcecull_run${i}.pkl"
+        echo "Output file: ${OUTPUT_DIR}/DQN_${scenario}_500k_term_logic_fixed_run${i}.pkl"
         echo "=========================================="
         
         # Run the training with the scenario parameter
         python dqn_learning.py \
-            --filename "${OUTPUT_DIR}/DQN_${scenario}_500k_parity12forcecull_run${i}.pkl" \
+            --filename "${OUTPUT_DIR}/DQN_${scenario}_500k_term_logic_fixed_run${i}.pkl" \
             --episodes $EPISODES \
             --scenario $scenario
         

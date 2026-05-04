@@ -24,6 +24,7 @@ def set_scenario(scenario='2025'):
     
     scenario_map = {
         '2025': 'animal_constants_2025',
+        '2025_updated': 'animal_constants_2025_updated',
         'OG': 'animal_constants_OG',
         'OB': 'animal_constants_OB',
         'UG': 'animal_constants_UG',
@@ -283,6 +284,9 @@ class CowEnv:
         self.parameter_a, self.parameter_b, self.parameter_c = self.assign_woods_parameters(parity)
         dim = (mac-1)*30 + 1
         milk_production = self.calc_integral_wood_curve(dim, dim+30, self.parameter_a, self.parameter_b, self.parameter_c)
+        if parity>=4:
+            milk_factor = animal_constants.MILK_PRODUCTION_DISCOUNT_FACTOR_FROM_P3_DICTIONARY[parity]
+            milk_production *= milk_factor
         if disease == 1:
             milk_production *= animal_constants.MASTITIS_SICK_MILK_PRODUCTION_MULTIPLIER
         return milk_production
