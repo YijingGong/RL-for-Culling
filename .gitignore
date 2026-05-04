@@ -1,3 +1,30 @@
-outputs/archive_q_learning_tests/policy_feed10M.pkl
-plot_visualization.ipynb
-outputs/*
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS / IDE
+.DS_Store
+.vscode/
+
+# Pre-CHTC training outputs (kept locally, not tracked)
+outputs/
+
+# Local post-processing pipeline artifacts
+collected/
+logs/
+
+# CHTC bundles built by prepare_project.sh / submission
+project.tar.gz
+packages.tar.gz
+
+# Training artifacts (large; reproducible from CHTC)
+*.tar.gz
+*.pkl
+*.pth
+*_eval.csv
+*_run.log

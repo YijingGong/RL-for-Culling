@@ -300,7 +300,7 @@ def load_or_create_dqn(filename, env, force_restart=False):
         print(f"LOADING EXISTING MODEL")
         print(f"{'='*70}")
         print(f"Model file: {model_filename}")
-        checkpoint = torch.load(model_filename)
+        checkpoint = torch.load(model_filename, weights_only=False)
         policy_net.load_state_dict(checkpoint['policy_net_state_dict'])
         target_net.load_state_dict(checkpoint['policy_net_state_dict'])
         rewards_per_episode = checkpoint['rewards_per_episode']

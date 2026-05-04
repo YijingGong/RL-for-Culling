@@ -1,0 +1,25 @@
+# HTCondor submit file for DQN training + evaluation
+# Submits 25 jobs: 5 scenarios × 5 seeds
+
+universe = vanilla
+
+log = logs/dqn_$(scenario)_seed$(seed).log
+error = logs/dqn_$(scenario)_seed$(seed).err
+output = logs/dqn_$(scenario)_seed$(seed).out
+
+executable = run_dqn.sh
+arguments = $(scenario) $(seed)
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = packages.tar.gz, project.tar.gz
+
+# Resource requests
+request_cpus = 1
+request_memory = 4GB
+request_disk = 2GB
+
+# Allow jobs to run for up to 24 hours
++MaxRunningTime = 86400
+
+queue scenario, seed from arg_matrix.csv
