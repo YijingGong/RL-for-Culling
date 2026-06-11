@@ -1,0 +1,20 @@
+{
+  "annual_return_per_stall": 1828.6137285130383,
+  "monthly_reward": 152.38447737608652,
+  "annual_culling_rate_pct": 21.130260002075623,
+  "culling_voluntary_pct": 17.290357542166113,
+  "culling_mortality_pct": 3.839902459909511,
+  "culling_involuntary_pct": 0.0,
+  "mean_parity_incl_springer": 3.1541406189361934,
+  "productive_life_yr": 4.732549433380234,
+  "springer_time_fraction": 0.017608550001655107,
+  "cm_cost_by_stage": {
+    "Early (MAC 1-3)": 358.0039070557455,
+    "Mid (MAC 4-6)": 289.5144732922174,
+    "Late (MAC 7-9)": 158.09270166652811,
+    "Extended (MAC>=10)": 112.09045268832395
+  },
+  "avg_preg_value_parity1": 764.9394663859755,
+  "avg_preg_value_parity2": 648.8979223873714,
+  "avg_preg_value_parity3": 522.707415461427
+}

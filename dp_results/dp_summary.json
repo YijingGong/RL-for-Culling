@@ -1,0 +1,102 @@
+{
+  "2025": {
+    "annual_return_per_stall": 3100.877473676714,
+    "monthly_reward": 258.4064561397262,
+    "annual_culling_rate_pct": 26.295764301437117,
+    "culling_voluntary_pct": 22.866913635136626,
+    "culling_mortality_pct": 3.428850666300492,
+    "culling_involuntary_pct": 0.0,
+    "mean_parity_incl_springer": 2.6923875991177506,
+    "productive_life_yr": 3.8028938369566534,
+    "springer_time_fraction": 0.021913136917965138,
+    "cm_cost_by_stage": {
+      "Early (MAC 1-3)": 436.1437284199376,
+      "Mid (MAC 4-6)": 281.44983697119665,
+      "Late (MAC 7-9)": 98.28787509741376,
+      "Extended (MAC>=10)": 97.04538037757365
+    },
+    "avg_preg_value_parity1": 414.8716262895176,
+    "avg_preg_value_parity2": 272.1355893571724,
+    "avg_preg_value_parity3": 187.2524197869567
+  },
+  "OG": {
+    "annual_return_per_stall": 3824.073523584754,
+    "monthly_reward": 318.67279363206285,
+    "annual_culling_rate_pct": 19.382051483030445,
+    "culling_voluntary_pct": 15.345586667022449,
+    "culling_mortality_pct": 4.036464816007996,
+    "culling_involuntary_pct": 0.0,
+    "mean_parity_incl_springer": 3.4026545489148607,
+    "productive_life_yr": 5.159412567217301,
+    "springer_time_fraction": 0.016151709569247438,
+    "cm_cost_by_stage": {
+      "Early (MAC 1-3)": 572.3885327421776,
+      "Mid (MAC 4-6)": 530.2474482201799,
+      "Late (MAC 7-9)": 284.95710294292167,
+      "Extended (MAC>=10)": 29.01180785892594
+    },
+    "avg_preg_value_parity1": 473.9358636443292,
+    "avg_preg_value_parity2": 510.597318538943,
+    "avg_preg_value_parity3": 507.3800115556804
+  },
+  "OB": {
+    "annual_return_per_stall": 1060.9546230576766,
+    "monthly_reward": 88.41288525480638,
+    "annual_culling_rate_pct": 19.13174648790109,
+    "culling_voluntary_pct": 13.85981893155498,
+    "culling_mortality_pct": 4.025370712571538,
+    "culling_involuntary_pct": 1.2465568437745738,
+    "mean_parity_incl_springer": 3.3927857903493424,
+    "productive_life_yr": 5.226914336505554,
+    "springer_time_fraction": 0.015943122073264326,
+    "cm_cost_by_stage": {
+      "Early (MAC 1-3)": 363.3499475838671,
+      "Mid (MAC 4-6)": 318.5304220406624,
+      "Late (MAC 7-9)": 165.6626916750149,
+      "Extended (MAC>=10)": 21.559126722395423
+    },
+    "avg_preg_value_parity1": 352.89539087113224,
+    "avg_preg_value_parity2": 395.0973323003775,
+    "avg_preg_value_parity3": 373.5166990854892
+  },
+  "UG": {
+    "annual_return_per_stall": 4580.408688782229,
+    "monthly_reward": 381.70072406518574,
+    "annual_culling_rate_pct": 20.0322799221066,
+    "culling_voluntary_pct": 16.06144207551138,
+    "culling_mortality_pct": 3.970837846595222,
+    "culling_involuntary_pct": 0.0,
+    "mean_parity_incl_springer": 3.314759010528859,
+    "productive_life_yr": 4.991943023402199,
+    "springer_time_fraction": 0.01669356660175322,
+    "cm_cost_by_stage": {
+      "Early (MAC 1-3)": 587.8315024874653,
+      "Mid (MAC 4-6)": 508.33358330745403,
+      "Late (MAC 7-9)": 261.4998385452594,
+      "Extended (MAC>=10)": 127.16922065050147
+    },
+    "avg_preg_value_parity1": 836.5053279695252,
+    "avg_preg_value_parity2": 753.637415340162,
+    "avg_preg_value_parity3": 652.2787439200258
+  },
+  "UB": {
+    "annual_return_per_stall": 1828.6137285130383,
+    "monthly_reward": 152.38447737608652,
+    "annual_culling_rate_pct": 21.130260002075623,
+    "culling_voluntary_pct": 17.290357542166113,
+    "culling_mortality_pct": 3.839902459909511,
+    "culling_involuntary_pct": 0.0,
+    "mean_parity_incl_springer": 3.1541406189361934,
+    "productive_life_yr": 4.732549433380234,
+    "springer_time_fraction": 0.017608550001655107,
+    "cm_cost_by_stage": {
+      "Early (MAC 1-3)": 358.0039070557455,
+      "Mid (MAC 4-6)": 289.5144732922174,
+      "Late (MAC 7-9)": 158.09270166652811,
+      "Extended (MAC>=10)": 112.09045268832395
+    },
+    "avg_preg_value_parity1": 764.9394663859755,
+    "avg_preg_value_parity2": 648.8979223873714,
+    "avg_preg_value_parity3": 522.707415461427
+  }
+}
