@@ -1,6 +1,6 @@
 {
-  "annual_return_per_stall": 1060.9546230576766,
-  "monthly_reward": 88.41288525480638,
+  "annual_return_per_stall": 1060.9546230576761,
+  "monthly_reward": 88.41288525480634,
   "annual_culling_rate_pct": 19.13174648790109,
   "culling_voluntary_pct": 13.85981893155498,
   "culling_mortality_pct": 4.025370712571538,
@@ -10,11 +10,11 @@
   "springer_time_fraction": 0.015943122073264326,
   "cm_cost_by_stage": {
     "Early (MAC 1-3)": 363.3499475838671,
-    "Mid (MAC 4-6)": 318.5304220406624,
-    "Late (MAC 7-9)": 165.6626916750149,
-    "Extended (MAC>=10)": 21.559126722395423
+    "Mid (MAC 4-6)": 318.5304220406623,
+    "Late (MAC 7-9)": 165.66269167501477,
+    "Extended (MAC>=10)": 21.559126722395302
   },
-  "avg_preg_value_parity1": 352.89539087113224,
-  "avg_preg_value_parity2": 395.0973323003775,
-  "avg_preg_value_parity3": 373.5166990854892
+  "avg_preg_value_parity1": 352.8953908711323,
+  "avg_preg_value_parity2": 395.0973323003774,
+  "avg_preg_value_parity3": 373.51669908548917
 }
