@@ -70,9 +70,24 @@ class ReplayBuffer:
         return len(self.buffer)
 
 
+PROD_SD_NORM = 0.11  # scale used to standardize the production multiplier input (matches PRODUCTION_MULT_SD)
+
+
 def state_to_tensor(state):
-    """Convert state tuple (parity, mac, mip, disease) to tensor"""
-    return torch.FloatTensor(list(state))
+    """Convert state tuple (parity, mac, mip, disease, M) to a normalized tensor.
+
+    Inputs are scaled to a comparable range so the continuous production
+    multiplier M is not swamped by the larger integer state variables:
+    parity/12, mac/20, mip/9, disease (0/1), and (M-1)/0.11.
+    """
+    parity, mac, mip, disease, M = state
+    return torch.FloatTensor([
+        parity / 12.0,
+        mac / 20.0,
+        mip / 9.0,
+        float(disease),
+        (M - 1.0) / PROD_SD_NORM,
+    ])
 
 
 def dqn_learning(env, policy_net, target_net, optimizer, replay_buffer, rewards_per_episode, 
@@ -174,29 +189,35 @@ def train_dqn(policy_net, target_net, optimizer, replay_buffer, batch_size, gamm
     optimizer.step()
 
 
-def extract_q_table_from_dqn(policy_net, env):
+M_GRID = (0.7, 0.85, 1.0, 1.15, 1.3)  # production levels sampled for the (visualization) Q-table
+
+
+def extract_q_table_from_dqn(policy_net, env, m_grid=M_GRID):
     """
-    Extract Q-table from trained DQN for compatibility with analysis scripts.
-    Creates a dictionary mapping states to action Q-values.
+    Extract a Q-table from the trained DQN for compatibility with analysis/visualization.
+
+    The production multiplier M is continuous, so a complete tabular Q-table no longer
+    exists. Instead we evaluate the network on the discrete states across a grid of M
+    values. Keys are 5-tuples (parity, mac, mip, disease, M). The network itself
+    (saved to <filename>_model.pth) remains the source of truth for continuous states
+    during simulation/evaluation.
     """
     q_table = {}
-    
-    # Iterate through all possible states
+
     for parity in parity_range:
         for mim in mim_range:
             for mip in mip_range:
                 for disease in disease_range:
-                    state = (parity, mim, mip, disease)
-                    if utility.possible_state2(state, parity_range, mim_range, mip_range, disease_range):
-                        # Get Q-values from network
-                        with torch.no_grad():
-                            state_tensor = state_to_tensor(state).unsqueeze(0)
-                            q_values = policy_net(state_tensor).squeeze(0)
-                            q_keep = q_values[0].item()
-                            q_replace = q_values[1].item()
-                        
-                        q_table[state] = {'keep': q_keep, 'replace': q_replace}
-    
+                    base = (parity, mim, mip, disease)
+                    if utility.possible_state2(base, parity_range, mim_range, mip_range, disease_range):
+                        for M in m_grid:
+                            state = (parity, mim, mip, disease, M)
+                            with torch.no_grad():
+                                state_tensor = state_to_tensor(state).unsqueeze(0)
+                                q_values = policy_net(state_tensor).squeeze(0)
+                                q_table[state] = {'keep': q_values[0].item(),
+                                                  'replace': q_values[1].item()}
+
     return q_table
 
 
@@ -289,9 +310,9 @@ def load_or_create_dqn(filename, env, force_restart=False):
     """
     model_filename = filename.replace('.pkl', '_model.pth')
     
-    # Create networks
-    policy_net = DQN(state_dim=4, hidden_dim=64, action_dim=2)
-    target_net = DQN(state_dim=4, hidden_dim=64, action_dim=2)
+    # Create networks (state_dim=5: parity, mac, mip, disease, production multiplier M)
+    policy_net = DQN(state_dim=5, hidden_dim=64, action_dim=2)
+    target_net = DQN(state_dim=5, hidden_dim=64, action_dim=2)
     optimizer = optim.Adam(policy_net.parameters(), lr=0.001)
     replay_buffer = ReplayBuffer(capacity=100000)
     

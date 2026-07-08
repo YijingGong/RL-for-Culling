@@ -16,6 +16,8 @@ import csv
 import time
 import cow_environment2
 import utility
+import torch
+from dqn_learning import DQN, state_to_tensor
 
 parity_range = range(13)
 mim_range = range(21)
@@ -30,18 +32,35 @@ def load_q_table(pkl_path):
     return q_table, rewards_per_episode
 
 
-def get_action(q_table, state):
+def load_policy_net(pkl_path, state_dim=5):
+    """Load the trained DQN network (source of truth for continuous states).
+
+    The network weights are saved alongside the .pkl as <base>_model.pth.
+    Returns (policy_net, rewards_per_episode).
     """
-    Get the greedy action from the Q-table for a given state.
+    model_filename = pkl_path.replace('.pkl', '_model.pth')
+    checkpoint = torch.load(model_filename, weights_only=False)
+    policy_net = DQN(state_dim=state_dim, hidden_dim=64, action_dim=2)
+    policy_net.load_state_dict(checkpoint['policy_net_state_dict'])
+    policy_net.eval()
+    return policy_net, checkpoint.get('rewards_per_episode', [])
+
+
+def get_action(policy, state):
+    """
+    Greedy action for a state. `policy` may be either the trained DQN network
+    (preferred; handles the continuous production level) or a Q-table dict
+    (legacy; keys must match the state exactly).
     Returns 'keep' or 'replace'.
     """
-    if state in q_table:
-        q_keep = q_table[state]['keep']
-        q_replace = q_table[state]['replace']
-        return 'keep' if q_keep >= q_replace else 'replace'
-    else:
-        # If state not in Q-table (shouldn't happen), default to keep
-        return 'keep'
+    if isinstance(policy, dict):
+        if state in policy:
+            return 'keep' if policy[state]['keep'] >= policy[state]['replace'] else 'replace'
+        return 'keep'  # state not tabulated
+    # network policy
+    with torch.no_grad():
+        q = policy(state_to_tensor(state).unsqueeze(0)).squeeze(0)
+    return 'keep' if q[0].item() >= q[1].item() else 'replace'
 
 
 def evaluate_policy(q_table, env, num_episodes=1000, max_steps=180, gamma=0.95,
@@ -133,9 +152,9 @@ def evaluate_by_starting_parity(q_table, env, num_episodes_per_parity=500,
 
         for ep in range(num_episodes_per_parity):
             if p == 0:
-                state = (0, 0, 9, 0)  # springer
+                state = (0, 0, 9, 0, 1.0)  # springer, average producer (M=1.0)
             else:
-                state = (p, 1, 0, 0)  # start of lactation
+                state = (p, 1, 0, 0, 1.0)  # start of lactation, average producer (M=1.0)
 
             env.state = state  # manually set the starting state
             total_reward = 0.0
@@ -282,32 +301,36 @@ def main():
         output_pkl = args.output
         output_csv = args.output.replace('.pkl', '.csv')
 
-    # Load trained model
+    # Load trained model: the network is the policy (handles continuous M);
+    # the Q-table (gridded over M) is loaded only for the saved artifact.
     print(f"Loading trained model from {args.model}")
-    q_table, rewards_per_episode = load_q_table(args.model)
-    print(f"  Q-table has {len(q_table)} states")
+    policy_net, rewards_per_episode = load_policy_net(args.model)
+    try:
+        q_table, _ = load_q_table(args.model)
+    except Exception:
+        q_table = {}
     print(f"  Training ran for {len(rewards_per_episode)} episodes")
 
     # Create environment
     env = cow_environment2.CowEnv(parity_range, mim_range, mip_range,
                                   disease_range)
 
-    # Run overall evaluation
+    # Run overall evaluation (uses the network policy)
     print(f"\nRunning overall evaluation ({args.eval_episodes} episodes)...")
     start = time.time()
-    results = evaluate_policy(q_table, env,
+    results = evaluate_policy(policy_net, env,
                               num_episodes=args.eval_episodes,
                               max_steps=180, gamma=0.95,
                               seed=args.eval_seed)
     elapsed_overall = time.time() - start
     print(f"  Completed in {elapsed_overall:.1f}s")
 
-    # Run per-parity evaluation
+    # Run per-parity evaluation (uses the network policy)
     print(f"\nRunning per-parity evaluation "
           f"({args.parity_episodes} episodes per parity)...")
     start = time.time()
     parity_results = evaluate_by_starting_parity(
-        q_table, env,
+        policy_net, env,
         num_episodes_per_parity=args.parity_episodes,
         max_steps=180, gamma=0.95,
         seed=args.eval_seed + 1)

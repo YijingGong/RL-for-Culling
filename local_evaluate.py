@@ -34,11 +34,15 @@ import random
 
 import cow_environment2
 import utility
+import torch
+from dqn_learning import DQN, state_to_tensor
 
 parity_range = range(13)
 mim_range = range(21)
 mip_range = range(10)
 disease_range = range(2)
+
+SPRINGER4 = (0, 0, 9, 0)  # springer identity on the discrete dimensions (M ignored)
 
 SCENARIOS = ['2025', 'OG', 'OB', 'UG', 'UB']
 SEEDS = [42, 123, 456, 789, 1024]
@@ -51,14 +55,25 @@ def load_q_table(pkl_path):
     return q_table, rewards_per_episode
 
 
-def get_action(q_table, state):
-    """Get the greedy action from the Q-table for a given state."""
-    if state in q_table:
-        q_keep = q_table[state]['keep']
-        q_replace = q_table[state]['replace']
-        return 'keep' if q_keep >= q_replace else 'replace'
-    else:
+def load_policy_net(pkl_path, state_dim=5):
+    """Load the trained DQN network (source of truth for continuous states)."""
+    model_filename = pkl_path.replace('.pkl', '_model.pth')
+    checkpoint = torch.load(model_filename, weights_only=False)
+    policy_net = DQN(state_dim=state_dim, hidden_dim=64, action_dim=2)
+    policy_net.load_state_dict(checkpoint['policy_net_state_dict'])
+    policy_net.eval()
+    return policy_net, checkpoint.get('rewards_per_episode', [])
+
+
+def get_action(policy, state):
+    """Greedy action; `policy` is either the DQN network (preferred) or a Q-table dict."""
+    if isinstance(policy, dict):
+        if state in policy:
+            return 'keep' if policy[state]['keep'] >= policy[state]['replace'] else 'replace'
         return 'keep'
+    with torch.no_grad():
+        q = policy(state_to_tensor(state).unsqueeze(0)).squeeze(0)
+    return 'keep' if q[0].item() >= q[1].item() else 'replace'
 
 
 def evaluate_policy(q_table, env, num_episodes=1000, max_steps=180, gamma=0.95,
@@ -241,9 +256,9 @@ def evaluate_by_starting_parity(q_table, env, num_episodes_per_parity=500,
 
         for ep in range(num_episodes_per_parity):
             if p == 0:
-                state = (0, 0, 9, 0)  # springer
+                state = (0, 0, 9, 0, 1.0)  # springer, average producer (M=1.0)
             else:
-                state = (p, 1, 0, 0)  # start of lactation, healthy
+                state = (p, 1, 0, 0, 1.0)  # start of lactation, healthy, average producer (M=1.0)
 
             env.state = state
             total_reward = 0.0
@@ -290,8 +305,8 @@ def classify_replacement(action, state, next_state, max_parity=12, max_mac=20):
     Returns:
         str or None: 'voluntary', 'death', 'involuntary', or None (no replacement)
     """
-    parity, mac, mip, disease = state
-    next_p, next_mac, next_mip, next_d = next_state
+    parity, mac, mip, disease = state[:4]          # ignore production multiplier M
+    next_p, next_mac, next_mip, next_d = next_state[:4]
 
     # Check if a replacement happened: next state is a springer
     is_replacement = (next_p == 0 and next_mac == 0 and next_mip == 9)
@@ -367,7 +382,7 @@ def evaluate_steady_state_distribution(q_table, env, num_episodes=200,
     replacements_per_ep = []
 
     for ep in range(num_episodes):
-        state = (0, 0, 9, 0)
+        state = (0, 0, 9, 0, 1.0)
         env.state = state
         ep_replacements = 0
 
@@ -603,9 +618,9 @@ def evaluate_single(pkl_path, scenario, eval_episodes=1000, parity_episodes=500,
     # Set scenario
     cow_environment2.set_scenario(scenario)
 
-    # Load trained model
-    q_table, rewards_per_episode = load_q_table(pkl_path)
-    print(f"  Q-table has {len(q_table)} states, trained for {len(rewards_per_episode)} episodes")
+    # Load trained model: network is the policy (handles continuous M)
+    policy_net, rewards_per_episode = load_policy_net(pkl_path)
+    print(f"  Network loaded, trained for {len(rewards_per_episode)} episodes")
 
     # Create environment
     env = cow_environment2.CowEnv(parity_range, mim_range, mip_range, disease_range)
@@ -613,14 +628,14 @@ def evaluate_single(pkl_path, scenario, eval_episodes=1000, parity_episodes=500,
     # Overall evaluation + steady-state (combined)
     print(f"  Running overall evaluation + steady-state ({eval_episodes} episodes)...", end='', flush=True)
     start = time.time()
-    results, steady_state = evaluate_policy(q_table, env, num_episodes=eval_episodes,
+    results, steady_state = evaluate_policy(policy_net, env, num_episodes=eval_episodes,
                                            max_steps=180, gamma=0.95, seed=eval_seed)
     print(f" {time.time()-start:.1f}s")
 
     # Per-parity evaluation
     print(f"  Running per-parity evaluation ({parity_episodes} ep/parity)...", end='', flush=True)
     start = time.time()
-    parity_results = evaluate_by_starting_parity(q_table, env,
+    parity_results = evaluate_by_starting_parity(policy_net, env,
                                                   num_episodes_per_parity=parity_episodes,
                                                   max_steps=180, gamma=0.95,
                                                   seed=eval_seed + 1)
