@@ -59,7 +59,7 @@ class CowEnv:
             mip_range (Sequence[int]): Allowed months-in-pregnancy values.
             disease_range (Sequence[int]): Allowed disease status flags (typically 0/1).
         """
-        self.state = (0, 0, 9, 0, 1.0)  # (parity, mac, mip, disease, production multiplier M)
+        self.state = (0, 0, 9, 0, 1.0)  # (parity, mac, mip, disease, production multiplier prod_level)
         self.parameter_a = self.parameter_b = self.parameter_c = None
         self.actions = ['keep', 'replace']
         self.parity_range = parity_range
@@ -68,9 +68,9 @@ class CowEnv:
         self.disease_range = disease_range
 
     def sample_production_level(self):
-        """Draw a persistent per-cow production multiplier M from a truncated normal.
+        """Draw a persistent per-cow production multiplier prod_level from a truncated normal.
 
-        M scales the whole lactation curve (and hence milk income and feed/DMI).
+        prod_level scales the whole lactation curve (and hence milk income and feed/DMI).
         It is drawn once when a cow enters the herd and held constant for her life.
         """
         _ensure_scenario_loaded()
@@ -78,8 +78,8 @@ class CowEnv:
         sd = animal_constants.PRODUCTION_MULT_SD
         lo = animal_constants.PRODUCTION_MULT_MIN
         hi = animal_constants.PRODUCTION_MULT_MAX
-        m = np.random.normal(mean, sd)
-        return float(min(max(m, lo), hi))
+        draw = np.random.normal(mean, sd)
+        return float(min(max(draw, lo), hi))
 
     def reset(self):
         """Sample a random valid state with realistic disease prevalence."""
@@ -97,11 +97,11 @@ class CowEnv:
         disease_prevalence = incidence / (incidence + recovery) if (incidence + recovery) > 0 else 0
         disease = 1 if random.random() < disease_prevalence else 0
 
-        # Persistent production level for this cow (exploring starts cover the M range)
-        M = self.sample_production_level()
-        self.state = (parity, mac, mip, disease, M)
+        # Persistent production level for this cow (exploring starts cover the prod_level range)
+        prod_level = self.sample_production_level()
+        self.state = (parity, mac, mip, disease, prod_level)
 
-        # Ensure valid state (M does not affect validity)
+        # Ensure valid state (prod_level does not affect validity)
         while not utility.possible_state2(self.state, self.parity_range, self.mac_range,
                                         self.mip_range, self.disease_range, dnb_min=3, dnb_max=10):
             parity = random.choice(self.parity_range)
@@ -111,7 +111,7 @@ class CowEnv:
             recovery = animal_constants.MASTITIS_RECOVER_RATE
             disease_prevalence = incidence / (incidence + recovery) if (incidence + recovery) > 0 else 0
             disease = 1 if random.random() < disease_prevalence else 0
-            self.state = (parity, mac, mip, disease, M)
+            self.state = (parity, mac, mip, disease, prod_level)
 
         return self.state
 
@@ -133,12 +133,12 @@ class CowEnv:
         breed_cost = 0
         treatment_cost = 0
         feed_cost = 0
-        parity, mac, mip, disease, M = self.state
-        # print("state:", parity, mac, mip, disease, M)
+        parity, mac, mip, disease, prod_level = self.state
+        # print("state:", parity, mac, mip, disease, prod_level)
 
         if action == 'replace':
             slaughter_income = self.calculate_slaughter_income(parity, disease) 
-            feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, M) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+            feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, prod_level) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
             reward = slaughter_income - animal_constants.REPLACEMENT_COST - feed_cost
             self.state = (0, 0, 9, 0, self.sample_production_level()) # replaced by a new springer
             # print(">replace")
@@ -153,13 +153,13 @@ class CowEnv:
             if self.death_status(parity, disease): # died
                 # print(">keep died")
                 slaughter_income = 0 # it's 0 because it is a dead cow
-                feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, M) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+                feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, prod_level) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
                 reward = slaughter_income - animal_constants.REPLACEMENT_COST - feed_cost
                 self.state = (0, 0, 9, 0, self.sample_production_level()) # replaced by a new springer
                 # print("slaughter_income:", slaughter_income, "replacement_cost", animal_constants.REPLACEMENT_COST )
             else:
                 # milking
-                milk_income = self.calculate_milk_income(parity, mac, mip, disease, M)
+                milk_income = self.calculate_milk_income(parity, mac, mip, disease, prod_level)
                 next_mac = mac + 1
 
                 # pregnancy status
@@ -173,7 +173,7 @@ class CowEnv:
                     # If the cow has reached the maximum parity in the model, she is assumed to be dead after calving and replaced by a new springer.
                     if next_parity > max(self.parity_range):
                         slaughter_income = 0
-                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, M) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, prod_level) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
                         reward = (milk_income + calf_income + slaughter_income # only calf income is non-zero, because this old cow is currently dry and  dead after calving
                                   - animal_constants.REPLACEMENT_COST - feed_cost)
                         self.state = (0, 0, 9, 0, self.sample_production_level())  # replaced by a new springer
@@ -205,22 +205,22 @@ class CowEnv:
                 if next_mac > max(self.mac_range):
                     if parity == max(self.parity_range): # if the cow has already reached max parity, she is assumed to be dead after max MAC and replaced by a new springer
                         slaughter_income = 0
-                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, M) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, prod_level) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
                         reward = (milk_income + calf_income + slaughter_income # only milk income is non-zero, because this old cow is currently non-pregnant and milking and dead after MAC > max MAC
                                     - animal_constants.REPLACEMENT_COST - feed_cost)
                         self.state = (0, 0, 9, 0, self.sample_production_level())  # replaced by a new springer
                         return self.state, reward
                     else: # if the cow has not yet reached max parity, she is assumed to be alive but replaced by a new springer after max MAC 
                         slaughter_income = self.calculate_slaughter_income(parity, disease) 
-                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, M) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+                        feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, prod_level) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
                         reward = (milk_income + calf_income + slaughter_income
                                     - animal_constants.REPLACEMENT_COST - feed_cost)
                         self.state = (0, 0, 9, 0, self.sample_production_level())  # replaced by a new springer
                         return self.state, reward
 
-                feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, M) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
+                feed_cost = self.calculate_feed_cost(parity, mac, mip, disease, prod_level) # assume the culling happen at the end of the month, so we still need to pay feed cost for this month
                 reward = milk_income + calf_income - breed_cost - treatment_cost - feed_cost
-                self.state = (next_parity, next_mac, next_mip, next_disease, M)  # cow kept: production level M persists
+                self.state = (next_parity, next_mac, next_mip, next_disease, prod_level)  # cow kept: production level prod_level persists
                 # print(">keep not died")
                 # print("milk income:", milk_income, "calf_income:", calf_income, "breed_cost", breed_cost, "treatment_cost",treatment_cost)
         # print("one reward:", reward)
@@ -284,9 +284,9 @@ class CowEnv:
         result, _ = quad(self.get_y_values_wood_curve, t1, t2, args=(parameter_a, parameter_b, parameter_c))
         return result
 
-    def calculate_monthly_milk_production(self, parity, mac, mip, disease, M=1.0):
+    def calculate_monthly_milk_production(self, parity, mac, mip, disease, prod_level=1.0):
         """Estimate monthly milk production using Woods curve. Discounts for disease if applicable.
-        Scaled by the persistent per-cow production multiplier M (default 1.0 = average cow).
+        Scaled by the persistent per-cow production multiplier prod_level (default 1.0 = average cow).
 
         Args:
             parity (int): Cow parity.
@@ -306,10 +306,10 @@ class CowEnv:
             milk_production *= milk_factor
         if disease == 1:
             milk_production *= animal_constants.MASTITIS_SICK_MILK_PRODUCTION_MULTIPLIER
-        milk_production *= M  # persistent per-cow production multiplier
+        milk_production *= prod_level  # persistent per-cow production multiplier
         return milk_production
 
-    def calculate_milk_income(self, parity, mac, mip, disease, M=1.0):
+    def calculate_milk_income(self, parity, mac, mip, disease, prod_level=1.0):
         """Calculate milk income for given parity, MAC, and disease status.
 
         Args:
@@ -318,16 +318,16 @@ class CowEnv:
         Returns:
             float: Estimated milk income for the month.
         """
-        milk_production = self.calculate_monthly_milk_production(parity, mac, mip, disease, M)
+        milk_production = self.calculate_monthly_milk_production(parity, mac, mip, disease, prod_level)
         milk_income = milk_production*2.2/100 * animal_constants.MILK_PRICE
         return milk_income
 
-    def _estimate_daily_dmi(self, parity, mac, mip, disease, M=1.0):
+    def _estimate_daily_dmi(self, parity, mac, mip, disease, prod_level=1.0):
         """Return daily DMI (kg/d) using milk, body weight, and weeks in milk."""
         if parity == 0:  # heifer springer
             return 9 # hard-coded fixed 9 kg/day for springer heifer
 
-        monthly_milk = self.calculate_monthly_milk_production(parity, mac, mip, disease, M)
+        monthly_milk = self.calculate_monthly_milk_production(parity, mac, mip, disease, prod_level)
         avg_milk_per_day = monthly_milk / 30.0
         metabolic_bw = self.get_body_weight(parity) ** 0.75
         dim_start = (mac - 1) * 30 + 1
@@ -336,11 +336,11 @@ class CowEnv:
         weeks_in_milk = avg_dim / 7.0
         return (0.372 * avg_milk_per_day + 0.0968 * metabolic_bw) * (1 - np.exp(-0.192 * (weeks_in_milk + 3.67)))
     
-    def get_monthly_dmi(self, parity, mac, mip, disease, M=1.0):
+    def get_monthly_dmi(self, parity, mac, mip, disease, prod_level=1.0):
         """Estimate monthly dry matter intake (kg/month) for the given state."""
-        return self._estimate_daily_dmi(parity, mac, mip, disease, M) * 30.0
+        return self._estimate_daily_dmi(parity, mac, mip, disease, prod_level) * 30.0
 
-    def calculate_feed_cost(self, parity, mac, mip, disease, M=1.0):
+    def calculate_feed_cost(self, parity, mac, mip, disease, prod_level=1.0):
         """Estimate monthly feed cost based on DMI and feed price.
 
         Args:
@@ -351,7 +351,7 @@ class CowEnv:
         Returns:
             float: Estimated monthly feed cost.
         """
-        monthly_dmi = self.get_monthly_dmi(parity, mac, mip, disease, M)
+        monthly_dmi = self.get_monthly_dmi(parity, mac, mip, disease, prod_level)
         feed_cost = monthly_dmi * animal_constants.FEED_COST
         return feed_cost
     

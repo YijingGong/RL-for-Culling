@@ -1,0 +1,26 @@
+# HTCondor submit file for DQN training - PRODUCTION MODEL (5 state variables)
+# Submits 25 jobs: 5 scenarios x 5 seeds
+# Logs and results are prefixed "prod" so they do not collide with the base 4-variable run.
+
+universe = vanilla
+
+log    = logs/dqn_prod_$(scenario)_seed$(seed).log
+error  = logs/dqn_prod_$(scenario)_seed$(seed).err
+output = logs/dqn_prod_$(scenario)_seed$(seed).out
+
+executable = run_dqn_prod.sh
+arguments  = $(scenario) $(seed)
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = packages.tar.gz, project.tar.gz
+
+# Resource requests
+request_cpus = 1
+request_memory = 4GB
+request_disk = 2GB
+
+# Allow jobs to run for up to 48 hours (training is ~15 h; extra margin for slow nodes)
++MaxRunningTime = 172800
+
+queue scenario, seed from arg_matrix.csv

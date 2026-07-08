@@ -152,9 +152,9 @@ def evaluate_by_starting_parity(q_table, env, num_episodes_per_parity=500,
 
         for ep in range(num_episodes_per_parity):
             if p == 0:
-                state = (0, 0, 9, 0, 1.0)  # springer, average producer (M=1.0)
+                state = (0, 0, 9, 0, 1.0)  # springer, average producer (prod_level=1.0)
             else:
-                state = (p, 1, 0, 0, 1.0)  # start of lactation, average producer (M=1.0)
+                state = (p, 1, 0, 0, 1.0)  # start of lactation, average producer (prod_level=1.0)
 
             env.state = state  # manually set the starting state
             total_reward = 0.0
@@ -301,8 +301,8 @@ def main():
         output_pkl = args.output
         output_csv = args.output.replace('.pkl', '.csv')
 
-    # Load trained model: the network is the policy (handles continuous M);
-    # the Q-table (gridded over M) is loaded only for the saved artifact.
+    # Load trained model: the network is the policy (handles continuous prod_level);
+    # the Q-table (gridded over prod_level) is loaded only for the saved artifact.
     print(f"Loading trained model from {args.model}")
     policy_net, rewards_per_episode = load_policy_net(args.model)
     try:

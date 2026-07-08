@@ -42,7 +42,7 @@ mim_range = range(21)
 mip_range = range(10)
 disease_range = range(2)
 
-SPRINGER4 = (0, 0, 9, 0)  # springer identity on the discrete dimensions (M ignored)
+SPRINGER4 = (0, 0, 9, 0)  # springer identity on the discrete dimensions (prod_level ignored)
 
 SCENARIOS = ['2025', 'OG', 'OB', 'UG', 'UB']
 SEEDS = [42, 123, 456, 789, 1024]
@@ -256,9 +256,9 @@ def evaluate_by_starting_parity(q_table, env, num_episodes_per_parity=500,
 
         for ep in range(num_episodes_per_parity):
             if p == 0:
-                state = (0, 0, 9, 0, 1.0)  # springer, average producer (M=1.0)
+                state = (0, 0, 9, 0, 1.0)  # springer, average producer (prod_level=1.0)
             else:
-                state = (p, 1, 0, 0, 1.0)  # start of lactation, healthy, average producer (M=1.0)
+                state = (p, 1, 0, 0, 1.0)  # start of lactation, healthy, average producer (prod_level=1.0)
 
             env.state = state
             total_reward = 0.0
@@ -305,7 +305,7 @@ def classify_replacement(action, state, next_state, max_parity=12, max_mac=20):
     Returns:
         str or None: 'voluntary', 'death', 'involuntary', or None (no replacement)
     """
-    parity, mac, mip, disease = state[:4]          # ignore production multiplier M
+    parity, mac, mip, disease = state[:4]          # ignore production multiplier prod_level
     next_p, next_mac, next_mip, next_d = next_state[:4]
 
     # Check if a replacement happened: next state is a springer
@@ -618,7 +618,7 @@ def evaluate_single(pkl_path, scenario, eval_episodes=1000, parity_episodes=500,
     # Set scenario
     cow_environment2.set_scenario(scenario)
 
-    # Load trained model: network is the policy (handles continuous M)
+    # Load trained model: network is the policy (handles continuous prod_level)
     policy_net, rewards_per_episode = load_policy_net(pkl_path)
     print(f"  Network loaded, trained for {len(rewards_per_episode)} episodes")
 

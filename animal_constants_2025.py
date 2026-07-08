@@ -62,7 +62,7 @@ WOODS_PARAMETERS = [[15.72, 22.06, 21.92], [0.2433, 0.235, 0.2627], [0.002445, 0
 MILK_PRODUCTION_DISCOUNT_FACTOR_FROM_P3_DICTIONARY={4: 1.035, 5: 1.049, 6: 1.046, 7: 1.036, 8: 1.018, 9: 0.995, 10: 0.957, 11: 0.918, 12: 0.88} # same lactation curve shape as P3+ above, but different height (https://www.sciencedirect.com/science/article/pii/S2666910225000924?via%3Dihub#tbl1fn1) they have P1 to P10, P11 and P12 are estimated by extrapolation. 
 
 # --- Production level (persistent per-cow milk multiplier) ---
-# M scales the whole Wood's curve (hence milk income and DMI/feed cost).
+# prod_level scales the whole Wood's curve (hence milk income and DMI/feed cost).
 # Drawn once at first calving, held constant for the cow's life, resampled at replacement.
 # SD from the between-cow (animal) variance component of 305-d milk yield in US Holsteins:
 #   sqrt(1,236,877) / 10,210 = 1,112 / 10,210 = 0.11   (Li et al., 2022, Table 6)
