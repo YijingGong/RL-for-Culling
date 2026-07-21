@@ -1,0 +1,6 @@
+Scenario,Annual $/stall,SE,Mean Herd Parity,Mean Production (retained herd),Mean Repl. Parity,Repl/15yr,Avg Life (yr),Culling Rate Total (%),Culling Rate Voluntary (%),Culling Rate Death (%),Culling Rate Involuntary (%)
+2025 Baseline,3187,3,2.58,1.040,3.75,5.2,2.9,34.7,31.4,3.2,0.1
+"Oversupply, Good",3888,5,3.12,1.028,4.50,3.9,3.8,26.1,22.3,3.8,0.1
+"Oversupply, Bad",1077,2,3.12,1.018,4.83,3.7,4.1,24.5,20.4,3.7,0.4
+"Undersupply, Good",4623,7,3.02,1.021,4.63,3.9,3.8,26.1,22.4,3.6,0.2
+"Undersupply, Bad",1842,4,2.89,1.018,4.66,3.9,3.8,26.3,22.5,3.5,0.3

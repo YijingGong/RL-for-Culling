@@ -1,30 +1,9 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.egg-info/
-
-# Notebooks
-.ipynb_checkpoints/
-
-# OS / IDE
-.DS_Store
-.vscode/
-
-# Pre-CHTC training outputs (kept locally, not tracked)
 outputs/
-
-# Local post-processing pipeline artifacts
-collected/
-logs/
-
-# CHTC bundles built by prepare_project.sh / submission
-project.tar.gz
-packages.tar.gz
-
-# Training artifacts (large; reproducible from CHTC)
 *.tar.gz
-*.pkl
-*.pth
-*_eval.csv
-*_run.log
+collected/
+# Generated archives and caches
+prod_outputs*.zip
+project.tar.gz
+__pycache__/
+*.py[cod]
+.DS_Store
