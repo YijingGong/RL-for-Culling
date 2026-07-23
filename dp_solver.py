@@ -227,26 +227,37 @@ def stationary_metrics(S, idx, trans, Q):
     }
 
 
-def pregnancy_values(Vd):
-    """Value of a new pregnancy at conception MAC m (healthy): V(p,m+1,1,0)-V(p,m+1,0,0)."""
+def cow_value(Q, s):
+    """Cow value = retention payoff = Q_keep - Q_replace (manuscript Eqn 4;
+    De Vries, 2006)."""
+    return Q[s]['keep'] - Q[s]['replace']
+
+
+def pregnancy_values(Q):
+    """Value of a new pregnancy at conception MAC m (healthy), computed as the
+    difference in cow value (Q_keep - Q_replace; Eqn 4) between a pregnant and an
+    open cow in the same month, consistent with De Vries (2006). No positive-RPO
+    screen is applied, so pregnancy value and CM cost share one definition."""
     rows = []
     for p in range(1, 13):
         for m in range(3, 11):
             preg = (p, m + 1, 1, 0); open_ = (p, m + 1, 0, 0)
-            if preg in Vd and open_ in Vd:
+            if preg in Q and open_ in Q:
                 rows.append({'parity': p, 'conception_mac': m,
-                             'value_new_pregnancy': Vd[preg] - Vd[open_]})
+                             'value_new_pregnancy': cow_value(Q, preg) - cow_value(Q, open_)})
     return rows
 
 
-def cm_costs(Vd):
-    """Cost of CM for open cows: V(p,mac,0,0) - V(p,mac,0,1)."""
+def cm_costs(Q):
+    """Cost of CM for open cows, computed as the difference in cow value
+    (Q_keep - Q_replace; Eqn 4) between a healthy and a CM cow in the same month
+    (Bar et al., 2008; Cha et al., 2011)."""
     rows = []
     for p in range(1, 13):
         for mac in range(1, 21):
             h = (p, mac, 0, 0); s = (p, mac, 0, 1)
-            if h in Vd and s in Vd:
-                rows.append({'parity': p, 'mac': mac, 'cm_cost': Vd[h] - Vd[s]})
+            if h in Q and s in Q:
+                rows.append({'parity': p, 'mac': mac, 'cm_cost': cow_value(Q, h) - cow_value(Q, s)})
     return rows
 
 
@@ -273,8 +284,8 @@ def main():
         S, idx, trans, Vd, Q, iters, delta = solve(scn)
         print(f"  states={len(S)}  iterations={iters}  final_delta={delta:.2e}")
         herd = stationary_metrics(S, idx, trans, Q)
-        preg = pregnancy_values(Vd)
-        cm = cm_costs(Vd)
+        preg = pregnancy_values(Q)
+        cm = cm_costs(Q)
         stages = stage_avg(cm)
         with open(f"{args.outdir}/dp_{scn}_qtable.pkl", 'wb') as f:
             pickle.dump(Q, f)
