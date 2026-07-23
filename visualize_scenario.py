@@ -223,11 +223,11 @@ def find_culling_boundary(q_tables, disease=0, pregnant_start_mac=None):
 
 def compute_pregnancy_value_table(q_tables):
     """
-    Compute new pregnancy value: Q_keep(pregnant) - Q_keep(open)
+    Compute new pregnancy value: cowvalue(pregnant) - cowvalue(open), where cowvalue = Q_keep - Q_replace (Eqn 4)
     for each (parity, conception MAC), averaged over both health statuses.
 
     For each (parity, conceived_mac, disease) triple, the value is:
-      Q_keep(parity, mac, MIP=1, disease) - Q_keep(parity, mac, MIP=0, disease)
+      cowvalue(parity, mac, MIP=1, disease) - cowvalue(parity, mac, MIP=0, disease)
 
     The result is then averaged across disease in {0, 1} so that the
     comparison differs **only** in pregnancy status (MIP=0 vs MIP=1),
@@ -255,8 +255,8 @@ def compute_pregnancy_value_table(q_tables):
                                                 mip_range, disease_range)):
                     continue
 
-                mean_preg, _, _ = compute_q_keep_stats(q_tables, state_preg)
-                mean_open, _, _ = compute_q_keep_stats(q_tables, state_open)
+                mean_preg, _, _ = compute_q_diff_stats(q_tables, state_preg)
+                mean_open, _, _ = compute_q_diff_stats(q_tables, state_open)
 
                 if not np.isnan(mean_preg) and not np.isnan(mean_open):
                     diffs.append(mean_preg - mean_open)
@@ -719,7 +719,7 @@ def compute_pregnancy_value_by_mac(q_tables, parity):
     conception MAC, averaged over both health statuses (disease=0 and disease=1).
 
     For each (conceived_mac, disease):
-      diff = Q_keep(parity, mac+1, MIP=1, disease) - Q_keep(parity, mac+1, MIP=0, disease)
+      diff = cowvalue(parity, mac+1, MIP=1, disease) - cowvalue(parity, mac+1, MIP=0, disease)  # cowvalue = Q_keep - Q_replace
 
     The two diffs (healthy and mastitic) are averaged so that the comparison
     differs **only** in pregnancy status (MIP=0 vs MIP=1).
@@ -738,8 +738,8 @@ def compute_pregnancy_value_by_mac(q_tables, parity):
                     not utility.possible_state2(state_open, parity_range, mac_range,
                                                 mip_range, disease_range)):
                 continue
-            mean_p, _, _ = compute_q_keep_stats(q_tables, state_preg)
-            mean_o, _, _ = compute_q_keep_stats(q_tables, state_open)
+            mean_p, _, _ = compute_q_diff_stats(q_tables, state_preg)
+            mean_o, _, _ = compute_q_diff_stats(q_tables, state_open)
             if np.isnan(mean_p) or np.isnan(mean_o):
                 continue
             diffs.append(mean_p - mean_o)
@@ -757,7 +757,7 @@ def compute_mastitis_cost_by_mac(q_tables, parity):
     valid MIP values (0=open, 1-9=pregnant).
 
     For each (mac, mip):
-      diff = Q_keep(parity, mac, mip, CM=0) - Q_keep(parity, mac, mip, CM=1)
+      diff = cowvalue(parity, mac, mip, CM=0) - cowvalue(parity, mac, mip, CM=1)  # cowvalue = Q_keep - Q_replace
 
     Diffs are averaged across all valid mip values so that the comparison
     differs **only** in health status (CM=0 vs CM=1).
@@ -775,8 +775,8 @@ def compute_mastitis_cost_by_mac(q_tables, parity):
                     not utility.possible_state2(state_d, parity_range, mac_range,
                                                 mip_range, disease_range)):
                 continue
-            mean_h, _, _ = compute_q_keep_stats(q_tables, state_h)
-            mean_d, _, _ = compute_q_keep_stats(q_tables, state_d)
+            mean_h, _, _ = compute_q_diff_stats(q_tables, state_h)
+            mean_d, _, _ = compute_q_diff_stats(q_tables, state_d)
             if np.isnan(mean_h) or np.isnan(mean_d):
                 continue
             diffs.append(mean_h - mean_d)
