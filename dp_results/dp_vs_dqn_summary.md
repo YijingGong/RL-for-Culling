@@ -26,15 +26,15 @@ Exact value-iteration solution of the same MDP (identical parameters and reward 
 
 | Parity | DRL (paper) | DP (exact) |
 |---|---|---|
-| 1 | $418 | $415 |
-| 2 | $313 | $272 |
-| 3 | $231 | $187 |
+| 1 | $418 | $416 |
+| 2 | $313 | $284 |
+| 3 | $231 | $196 |
 
 ## Cost of clinical mastitis by lactation stage, baseline ($)
 
 | Stage | DRL (paper) | DP (exact) |
 |---|---|---|
-| Early (MAC 1-3) | $387 | $436 |
-| Mid (MAC 4-6) | $339 | $281 |
-| Late (MAC 7-9) | $293 | $98 |
-| Extended (MAC>=10) | $147 | $97 |
+| Early (MAC 1-3) | $387 | $399 |
+| Mid (MAC 4-6) | $339 | $346 |
+| Late (MAC 7-9) | $293 | $243 |
+| Extended (MAC>=10) | $147 | $132 |

@@ -9,12 +9,12 @@
   "productive_life_yr": 3.8028938369566534,
   "springer_time_fraction": 0.021913136917965138,
   "cm_cost_by_stage": {
-    "Early (MAC 1-3)": 436.1437284199379,
-    "Mid (MAC 4-6)": 281.4498369711972,
-    "Late (MAC 7-9)": 98.28787509741409,
-    "Extended (MAC>=10)": 97.04538037757365
+    "Early (MAC 1-3)": 399.08828048527903,
+    "Mid (MAC 4-6)": 345.722079138835,
+    "Late (MAC 7-9)": 242.62655123504817,
+    "Extended (MAC>=10)": 131.7905774896734
   },
-  "avg_preg_value_parity1": 414.87162628951774,
-  "avg_preg_value_parity2": 272.13558935717265,
-  "avg_preg_value_parity3": 187.25241978695692
+  "avg_preg_value_parity1": 416.26848942895685,
+  "avg_preg_value_parity2": 284.23421344474923,
+  "avg_preg_value_parity3": 196.44265944858614
 }
